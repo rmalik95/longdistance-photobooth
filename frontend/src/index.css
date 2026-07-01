@@ -4,12 +4,18 @@
 
 body {
     margin: 0;
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
+    font-family: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: #FDFBF7;
+}
+
+@keyframes camera-flash {
+    0% { opacity: 0.95; }
+    100% { opacity: 0; }
+}
+.camera-flash-effect {
+    animation: camera-flash 0.5s ease-out forwards;
 }
 
 code {

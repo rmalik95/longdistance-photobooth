@@ -7,10 +7,39 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: ['"Cabinet Grotesk"', 'sans-serif'],
+        body: ['"Satoshi"', 'sans-serif'],
+        accent: ['"Cormorant Garamond"', 'serif'],
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'
+      },
+      keyframes: {
+        flash: {
+          '0%': { opacity: '0.95' },
+          '100%': { opacity: '0' },
+        },
+        'strip-reveal': {
+          '0%': { opacity: '0', transform: 'translateY(40px) rotate(-2deg)' },
+          '100%': { opacity: '1', transform: 'translateY(0) rotate(-1deg)' },
+        },
+        'pop-in': {
+          '0%': { opacity: '0', transform: 'scale(1.5)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'pulse-soft': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' },
+        },
+      },
+      animation: {
+        flash: 'flash 0.5s ease-out forwards',
+        'strip-reveal': 'strip-reveal 0.6s cubic-bezier(0.16,1,0.3,1) forwards',
+        'pop-in': 'pop-in 0.5s cubic-bezier(0.16,1,0.3,1)',
+        'pulse-soft': 'pulse-soft 1.6s ease-in-out infinite',
       },
       colors: {
         background: 'hsl(var(--background))',
