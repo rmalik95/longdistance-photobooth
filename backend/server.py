@@ -112,9 +112,9 @@ async def schedule_capture(session: Session, expected_round: int, duration: floa
 async def finalize_strip(session: Session):
     session.state = "processing"
     await broadcast(session, {"type": "processing"})
-    host_photos = [session.captures[r]["host"] for r in range(1, session.total_rounds + 1)]
-    guest_photos = [session.captures[r]["guest"] for r in range(1, session.total_rounds + 1)]
     try:
+        host_photos = [session.captures[r]["host"] for r in range(1, session.total_rounds + 1)]
+        guest_photos = [session.captures[r]["guest"] for r in range(1, session.total_rounds + 1)]
         data_url = await asyncio.to_thread(generate_strip_data_url, host_photos, guest_photos)
     except Exception as exc:
         logger.error("Failed to generate photo strip: %s", exc)
@@ -240,7 +240,9 @@ async def websocket_endpoint(websocket: WebSocket, code: str, role: str = Query(
     if other_connected:
         await send_to(session, other, {"type": "partner_reconnected" if was_abandoned else "partner_joined"})
         if was_abandoned:
-            session.state = "both_ready" if session.both_camera_ready() else "waiting"
+            # A fresh reconnect after abandonment should not resume mid-round
+            # with stale captures -- restart the round sequence cleanly.
+            session.reset_for_retake()
             if session.state == "both_ready":
                 await broadcast(session, {"type": "both_ready"})
 

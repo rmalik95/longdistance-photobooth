@@ -11,8 +11,6 @@ import { buildWsUrl } from "@/lib/wsUrl";
 
 const btnPrimary =
   "bg-[#E07A5F] text-[#FDFBF7] font-bold border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-8 py-4 uppercase tracking-widest disabled:opacity-60 disabled:pointer-events-none";
-const btnSecondary =
-  "bg-[#FDFBF7] text-[#1A1A19] font-bold border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-8 py-4 uppercase tracking-widest";
 
 export default function Room() {
   const { code } = useParams();
@@ -31,6 +29,7 @@ export default function Room() {
   const [errorMessage, setErrorMessage] = useState("");
   const [flash, setFlash] = useState(false);
   const [enabling, setEnabling] = useState(false);
+  const [selfDisconnected, setSelfDisconnected] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(document.createElement("canvas"));
@@ -69,6 +68,16 @@ export default function Room() {
       clearInterval(countdownIntervalRef.current);
     };
   }, []);
+
+  // The <video> element only mounts once CameraStage renders (phase
+  // "waiting_partner" onward), which happens after getUserMedia already
+  // resolved. Re-attach the already-acquired stream whenever the video
+  // element becomes available so the self-preview and capture aren't blank.
+  useEffect(() => {
+    if (videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [phase]);
 
   const runLocalCountdown = useCallback((duration) => {
     clearInterval(countdownIntervalRef.current);
@@ -172,13 +181,19 @@ export default function Room() {
 
   const connectWebSocket = useCallback(
     (chosenRole) => {
+      setSelfDisconnected(false);
       const ws = new WebSocket(buildWsUrl(code, chosenRole));
       wsRef.current = ws;
       ws.onmessage = (evt) => {
         const data = JSON.parse(evt.data);
         handleServerMessage(data, ws);
       };
-      ws.onclose = () => {};
+      ws.onclose = () => {
+        setSelfDisconnected(true);
+        setPhase((p) =>
+          ["waiting_partner", "both_ready", "countdown", "captured_wait", "processing"].includes(p) ? "abandoned" : p
+        );
+      };
     },
     [code, handleServerMessage]
   );
@@ -351,7 +366,9 @@ export default function Room() {
               >
                 <WifiOff className="text-[#E07A5F]" size={28} />
                 <p className="font-body font-semibold text-[#1A1A19]">
-                  Your partner got disconnected. Ask them to reopen the link — this session will stay open for a little while.
+                  {selfDisconnected
+                    ? "Connection lost. Please refresh the page to try reconnecting."
+                    : "Your partner got disconnected. Ask them to reopen the link — this session will stay open for a little while."}
                 </p>
               </div>
             )}
