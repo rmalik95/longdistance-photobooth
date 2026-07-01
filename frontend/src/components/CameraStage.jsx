@@ -56,7 +56,7 @@ export default function CameraStage({
           <>
             <Camera className="text-[#F2CC8F] animate-pulse-soft" size={40} strokeWidth={2.5} />
             <p className="font-body font-semibold text-[#1A1A19] text-sm sm:text-base text-center px-4">
-              Partner connected — turning on their camera…
+              Partner connected, turning on their camera…
             </p>
           </>
         )}

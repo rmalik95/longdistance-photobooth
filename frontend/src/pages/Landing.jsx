@@ -49,7 +49,7 @@ export default function Landing() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-14 items-center">
         <div className="lg:col-span-3 flex flex-col gap-8">
           <span className="inline-flex items-center gap-2 self-start text-xs tracking-[0.2em] uppercase font-bold text-[#1A1A19] border-2 border-[#1A1A19] px-3 py-1.5 bg-[#F2CC8F]/40">
-            <Heart size={14} strokeWidth={3} /> for long distance couples
+            <Heart size={14} strokeWidth={3} /> for couples, friends & family, apart
           </span>
 
           <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none font-black text-[#1A1A19]">
@@ -59,8 +59,13 @@ export default function Landing() {
           </h1>
 
           <p className="font-body text-base sm:text-lg text-[#4A4A48] max-w-xl">
-            Start a session, send your partner the link, and both of you count down to the same shot —
-            captured live from two different places, merged into one photo strip.
+            Start a session, send the link to whoever you want in the shot, and count down together
+            to the same moment, captured live and merged into one photo strip.
+          </p>
+
+          <p className="font-body text-sm text-[#4A4A48]/80 max-w-xl">
+            Built for long-distance couples, friends, and family in different time zones or on the
+            other side of the world. Really, all you need is two people with two phones.
           </p>
 
           <PrivacyBanner />
@@ -130,7 +135,7 @@ export default function Landing() {
           <div className="relative -rotate-3 bg-white border-2 border-[#1A1A19] shadow-[8px_8px_0px_0px_rgba(26,26,25,1)] p-4 max-w-xs">
             <img
               src="https://images.unsplash.com/photo-1617643081052-214d322dc22d?crop=entropy&cs=srgb&fm=jpg&q=85"
-              alt="Couple photo strip moment"
+              alt="Photo strip moment shared from two places"
               className="w-full h-72 object-cover"
             />
             <p className="font-accent italic text-center text-lg mt-3 text-[#1A1A19]">together, apart</p>
@@ -139,7 +144,7 @@ export default function Landing() {
       </div>
 
       <p className="text-center text-xs text-[#4A4A48] mt-16 font-body">
-        Works on Chrome &amp; Safari — laptop or phone. Agree on a time with your partner, then jump in.
+        Works on Chrome &amp; Safari, laptop or phone. Agree on a time with the other person, then jump in.
       </p>
     </div>
   );

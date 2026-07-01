@@ -10,7 +10,7 @@ export default function SessionCodeBadge({ code }) {
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
-      toast.success("Link copied — send it to your partner!");
+      toast.success("Link copied, send it to the other person!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Could not copy automatically. Share this code instead: " + code);

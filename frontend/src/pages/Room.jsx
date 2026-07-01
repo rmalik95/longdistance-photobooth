@@ -368,7 +368,7 @@ export default function Room() {
                 <p className="font-body font-semibold text-[#1A1A19]">
                   {selfDisconnected
                     ? "Connection lost. Please refresh the page to try reconnecting."
-                    : "Your partner got disconnected. Ask them to reopen the link — this session will stay open for a little while."}
+                    : "Your partner got disconnected. Ask them to reopen the link. This session will stay open for a little while."}
                 </p>
               </div>
             )}
