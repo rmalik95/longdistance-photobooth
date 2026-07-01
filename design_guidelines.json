@@ -1,0 +1,129 @@
+{
+  "project_name": "Long Distance Couples Photobooth",
+  "theme": "light",
+  "archetype": "Archetype 3 (Pastel & Soft) + Tactile Neo-Brutalist",
+  "core_concept": "A physical photo strip in a digital space. The app should feel warm, intimate, and emotionally intelligent, with hard-bordered physical-feeling UI elements that contrast softly against a textured pastel background. Privacy ('we don't store anything') is communicated through an honest, raw, and direct visual tone, rather than sterile legal text.",
+  "typography": {
+    "font_family": {
+      "headings": "Cabinet Grotesk, sans-serif",
+      "body": "Satoshi, sans-serif",
+      "accent": "Cormorant Garamond, serif"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none font-black",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold",
+      "h3": "text-xl sm:text-2xl font-semibold",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base leading-relaxed font-medium",
+      "small": "text-sm font-medium",
+      "overline": "text-xs tracking-[0.2em] uppercase font-bold"
+    },
+    "rules": [
+      "Use 'Cabinet Grotesk' for structure, CTA, and primary navigation.",
+      "Use 'Satoshi' for body text, form inputs, and secondary information.",
+      "Use 'Cormorant Garamond' strictly in italic format for emotional accent words (e.g., 'together', 'memories') within larger headings to create romantic visual tension.",
+      "Privacy messaging must be highly legible, slightly oversized, and NOT hidden in fine print."
+    ]
+  },
+  "colors": {
+    "background": {
+      "base": "#FDFBF7",
+      "surface": "#FFFFFF",
+      "texture_overlay": "bg-noise/5"
+    },
+    "text": {
+      "primary": "#1A1A19",
+      "secondary": "#4A4A48",
+      "inverse": "#FDFBF7"
+    },
+    "brand": {
+      "primary": "#E07A5F",
+      "secondary": "#F2CC8F",
+      "accent_pink": "#FFB5A7",
+      "accent_sage": "#81B29A"
+    },
+    "borders": {
+      "default": "#1A1A19",
+      "subtle": "#E5E5E0"
+    },
+    "status": {
+      "waiting": "#F2CC8F",
+      "ready": "#81B29A",
+      "countdown": "#E07A5F"
+    },
+    "rules": [
+      "No full-screen gradients. Focus on flat, matte colors that feel like paper and physical cards.",
+      "Borders are critical: Use solid Charcoal (#1A1A19) borders (1px or 2px) for cards, buttons, and camera frames to create the tactile 'Neo-brutalist' physical feel.",
+      "Primary brand color (#E07A5F) is reserved for the most critical actions (Start Session, Capture)."
+    ]
+  },
+  "layout_and_spacing": {
+    "philosophy": "Generous Spacing + Structured Grids",
+    "patterns": {
+      "landing": "Asymmetrical Bento Grid. Mix large typography with floating polaroid-style image cards.",
+      "camera_room": "Split screen. Mobile: Top/Bottom split. Desktop: Left/Right 50/50 split.",
+      "photo_strip": "Vertical column format with thick white padding around photos and hard outer borders, perfectly mimicking a classic physical photobooth strip."
+    },
+    "spacing_scale": {
+      "section_y": "py-16 sm:py-24",
+      "container_padding": "px-6 sm:px-12",
+      "element_gap": "gap-6 sm:gap-8"
+    },
+    "camera_specific": {
+      "mobile_height": "h-[45vh]",
+      "desktop_height": "h-[80vh]",
+      "border_radius": "rounded-none sm:rounded-xl",
+      "frame_padding": "p-2 sm:p-4 bg-white border-2 border-charcoal shadow-[4px_4px_0px_0px_rgba(26,26,25,1)]"
+    }
+  },
+  "surfaces_and_components": {
+    "buttons": {
+      "primary": "bg-[#E07A5F] text-[#FDFBF7] font-bold border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-8 py-4 uppercase tracking-widest",
+      "secondary": "bg-[#FDFBF7] text-[#1A1A19] font-bold border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-8 py-4 uppercase tracking-widest"
+    },
+    "cards": "bg-white border-2 border-[#1A1A19] shadow-[6px_6px_0px_0px_rgba(26,26,25,1)] p-8",
+    "inputs": "bg-white border-2 border-[#1A1A19] rounded-none px-4 py-3 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#E07A5F] placeholder:font-normal placeholder:text-[#4A4A48]/50",
+    "camera_view": {
+      "container": "relative bg-[#1A1A19] overflow-hidden border-2 border-[#1A1A19]",
+      "waiting_overlay": "absolute inset-0 bg-[#FDFBF7]/80 backdrop-blur-md flex flex-col items-center justify-center z-10 text-[#1A1A19] font-bold",
+      "countdown_overlay": "absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+    }
+  },
+  "motion_and_interactions": {
+    "page_transitions": "Instant or very fast fade (0.2s). Avoid sluggish routing.",
+    "hover_states": "Hard shadows compress (translate x/y and shadow offset reduction) to feel like physical buttons being pushed.",
+    "camera_flash": "absolute inset-0 bg-white z-50 animate-[flash_0.5s_ease-out_forwards]",
+    "countdown": "Numbers scale down from 150% to 100% while fading in, emphasizing the impending capture. Use a bold, punchy font for the numbers.",
+    "photo_strip_reveal": "Slide up from bottom with a slight rotation, mimicking a strip printing out of a machine."
+  },
+  "media": {
+    "images": [
+      {
+        "category": "landing_hero",
+        "url": "https://images.unsplash.com/photo-1617643081052-214d322dc22d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxjb3VwbGUlMjBwb2xhcm9pZCUyMHBob3RvfGVufDB8fHx8MTc4MjkwNDIwOHww&ixlib=rb-4.1.0&q=85",
+        "description": "Couple polaroid photo. Use this as a floating, slightly tilted card on the landing page to instantly communicate the end result.",
+        "placement": "landing_page_hero"
+      },
+      {
+        "category": "texture",
+        "url": "https://images.unsplash.com/photo-1601662528567-526cd06f6582?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHx3YXJtJTIwcGFzdGVsJTIwZ3JhaW4lMjB0ZXh0dXJlfGVufDB8fHx8MTc4MjkwNDIyMXww&ixlib=rb-4.1.0&q=85",
+        "description": "Warm paper texture.",
+        "placement": "background_overlay (use with low opacity and mix-blend-multiply)"
+      }
+    ],
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-width 2.5, sharp corners if possible, colored #1A1A19."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Execute all layout building using pure HTML and Tailwind CSS (no Shadcn for layout shells) to strictly maintain the Neo-brutalist tactile aesthetic.",
+    "Ensure 'We don't store anything' messaging is prominent on the Landing Page and inside the Waiting Room. Make it a bold typographic feature, not an afterthought.",
+    "Camera Permissions UX: Show a clear, direct 'Enable Camera' button state before accessing `getUserMedia`. Handle iOS Safari quirks by ensuring camera triggers on a direct user interaction.",
+    "Mobile Split Screen: Must stack vertically (User on top, Partner on bottom, or vice-versa) with absolutely zero gap between them, divided by a 2px solid charcoal line.",
+    "Final Photo Strip: Render this using an HTML Canvas element so it can be seamlessly downloaded as a single image. Ensure a white background, consistent padding between the 6 shots (3 left, 3 right), and a playful footer at the bottom of the strip.",
+    "WebSockets: Display clear connection status indicators. If a partner disconnects, transition smoothly to an 'Abandoned' state rather than breaking the UI.",
+    "Install `lucide-react` for iconography.",
+    "Include `data-testid` attributes on all interactive elements (buttons, inputs, camera containers, countdown elements)."
+  ]
+}
