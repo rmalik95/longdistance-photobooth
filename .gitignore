@@ -86,3 +86,9 @@ android-sdk/
 credentials.json
 *.key
 .credentials
+
+# Emergent.sh platform artifacts (not used by this project)
+.emergent/
+test_result.md
+test_reports/
+.screenshots/

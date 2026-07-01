@@ -1,4 +1,4 @@
-# together, apart
+# Together, Apart
 
 A photobooth for two people in two different places. Start a session, send the link to
 whoever you want in the shot, and count down together to the same moment, captured live
