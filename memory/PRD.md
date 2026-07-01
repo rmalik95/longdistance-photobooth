@@ -42,6 +42,23 @@ known risks, privacy positioning, design principles, and post-MVP roadmap.)
   (Cabinet Grotesk / Satoshi / Cormorant Garamond fonts, hard charcoal borders + offset
   shadows, warm peach/pink palette).
 
+## Code Review Fixes (2026-02-XX, post-launch review)
+- **HIGH (confirmed & fixed)**: Self-camera preview and captured photos were coming out
+  blank/black. Root cause: `videoRef.current.srcObject` was assigned before the `<video>`
+  element mounted (it only mounts once phase reaches `waiting_partner`). Fixed with a
+  `useEffect` keyed on `phase` in `Room.jsx` that re-attaches the stream whenever the video
+  element (re)mounts. Verified via pixel-level sampling by testing_agent_v3 (not just DOM
+  state) — both host and guest camera feeds and the final strip now contain real content.
+- **MEDIUM (fixed)**: Reconnecting after abandonment mid-round no longer resumes with stale
+  captures/round — `server.py` now calls `session.reset_for_retake()` on reconnect.
+- **MEDIUM (fixed)**: `finalize_strip()` now builds photo lists inside the `try` block so a
+  `KeyError` correctly triggers the error/purge path instead of skipping it.
+- **MEDIUM (fixed)**: Client-side `ws.onclose` was a no-op leaving a disconnected user's own
+  UI stuck; now transitions to an `abandoned` state with a distinct "Connection lost" message
+  (verified via code review; could not be triggered via browser automation due to tooling
+  limitations forcing a live WebSocket close).
+- Minor dead-code cleanup (unused `btnSecondary` in Room.jsx).
+
 ## What's Been Implemented (2026-02-XX, initial build)
 - Full session creation + short-code join flow (no accounts)
 - Camera permission UX with explicit tap-to-enable (iOS Safari compatible)
