@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Download, RotateCcw, Eye } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export default function ResultPanel({ image, onDownload, onRetake }) {
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -44,6 +44,7 @@ export default function ResultPanel({ image, onDownload, onRetake }) {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-lg bg-[#FDFBF7] border-2 border-[#1A1A19]" data-testid="preview-dialog">
           <DialogTitle className="font-heading font-bold text-[#1A1A19]">Your photo strip</DialogTitle>
+          <DialogDescription className="sr-only">Preview of your combined photo strip, ready to download.</DialogDescription>
           <img src={image} alt="Preview" className="w-full h-auto" />
         </DialogContent>
       </Dialog>
