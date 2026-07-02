@@ -12,6 +12,11 @@ import { buildWsUrl } from "@/lib/wsUrl";
 const btnPrimary =
   "bg-[#E07A5F] text-[#FDFBF7] font-bold border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-8 py-4 uppercase tracking-widest disabled:opacity-60 disabled:pointer-events-none";
 
+const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+const MAX_RECONNECT_ATTEMPTS = 6;
+const BASE_RECONNECT_DELAY_MS = 1000;
+const MAX_RECONNECT_DELAY_MS = 10000;
+
 export default function Room() {
   const { code } = useParams();
   const navigate = useNavigate();
@@ -30,12 +35,22 @@ export default function Room() {
   const [flash, setFlash] = useState(false);
   const [enabling, setEnabling] = useState(false);
   const [selfDisconnected, setSelfDisconnected] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const [reconnectFailed, setReconnectFailed] = useState(false);
+  const [partnerVideoLive, setPartnerVideoLive] = useState(false);
 
   const videoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
   const canvasRef = useRef(document.createElement("canvas"));
   const streamRef = useRef(null);
   const wsRef = useRef(null);
+  const pcRef = useRef(null);
   const countdownIntervalRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
+  const reconnectAttemptsRef = useRef(0);
+  const manualCloseRef = useRef(false);
+  const terminalErrorRef = useRef(false);
+  const connectWebSocketRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +78,10 @@ export default function Room() {
 
   useEffect(() => {
     return () => {
+      manualCloseRef.current = true;
+      clearTimeout(reconnectTimeoutRef.current);
       if (wsRef.current) wsRef.current.close();
+      if (pcRef.current) pcRef.current.close();
       if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
       clearInterval(countdownIntervalRef.current);
     };
@@ -113,6 +131,52 @@ export default function Room() {
     }
   }, []);
 
+  const teardownPeerConnection = useCallback(() => {
+    if (pcRef.current) {
+      pcRef.current.close();
+      pcRef.current = null;
+    }
+    setPartnerVideoLive(false);
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+  }, []);
+
+  const createPeerConnection = useCallback((ws) => {
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    pc.onicecandidate = (e) => {
+      if (e.candidate && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "webrtc_ice_candidate", candidate: e.candidate }));
+      }
+    };
+    pc.ontrack = (e) => {
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
+      setPartnerVideoLive(true);
+    };
+    pc.onconnectionstatechange = () => {
+      if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
+        setPartnerVideoLive(false);
+      }
+    };
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => pc.addTrack(track, streamRef.current));
+    }
+    return pc;
+  }, []);
+
+  const startWebrtcOffer = useCallback(
+    async (ws) => {
+      teardownPeerConnection();
+      const pc = createPeerConnection(ws);
+      pcRef.current = pc;
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      ws.send(JSON.stringify({ type: "webrtc_offer", sdp: offer }));
+    },
+    [createPeerConnection, teardownPeerConnection]
+  );
+
+  const isPeerConnectionUsable = () =>
+    pcRef.current && !["failed", "disconnected", "closed"].includes(pcRef.current.connectionState);
+
   const handleServerMessage = useCallback(
     (data, ws) => {
       switch (data.type) {
@@ -135,6 +199,30 @@ export default function Room() {
         case "both_ready":
           setWaitingForPartnerShot(false);
           setPhase("both_ready");
+          if (role === "host" && !isPeerConnectionUsable()) {
+            startWebrtcOffer(ws);
+          }
+          break;
+        case "webrtc_offer":
+          teardownPeerConnection();
+          {
+            const pc = createPeerConnection(ws);
+            pcRef.current = pc;
+            (async () => {
+              await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+              const answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              ws.send(JSON.stringify({ type: "webrtc_answer", sdp: answer }));
+            })();
+          }
+          break;
+        case "webrtc_answer":
+          if (pcRef.current) pcRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
+          break;
+        case "webrtc_ice_candidate":
+          if (pcRef.current && data.candidate) {
+            pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(() => {});
+          }
           break;
         case "countdown_start":
           setRound(data.round);
@@ -166,6 +254,7 @@ export default function Room() {
           setPartnerConnected(false);
           setPartnerCameraReady(false);
           setPhase("abandoned");
+          teardownPeerConnection();
           break;
         case "session_full":
         case "error":
@@ -176,16 +265,47 @@ export default function Room() {
           break;
       }
     },
-    [runLocalCountdown, capturePhoto]
+    [runLocalCountdown, capturePhoto, role, startWebrtcOffer, createPeerConnection, teardownPeerConnection]
   );
+
+  const scheduleReconnect = useCallback((chosenRole) => {
+    if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+      setReconnecting(false);
+      setReconnectFailed(true);
+      return;
+    }
+    setReconnecting(true);
+    setReconnectFailed(false);
+    const delay = Math.min(BASE_RECONNECT_DELAY_MS * 2 ** reconnectAttemptsRef.current, MAX_RECONNECT_DELAY_MS);
+    reconnectAttemptsRef.current += 1;
+    clearTimeout(reconnectTimeoutRef.current);
+    reconnectTimeoutRef.current = setTimeout(() => {
+      if (!manualCloseRef.current) connectWebSocketRef.current?.(chosenRole);
+    }, delay);
+  }, []);
 
   const connectWebSocket = useCallback(
     (chosenRole) => {
+      manualCloseRef.current = false;
+      terminalErrorRef.current = false;
       setSelfDisconnected(false);
       const ws = new WebSocket(buildWsUrl(code, chosenRole));
       wsRef.current = ws;
+      ws.onopen = () => {
+        reconnectAttemptsRef.current = 0;
+        setReconnecting(false);
+        setReconnectFailed(false);
+      };
       ws.onmessage = (evt) => {
         const data = JSON.parse(evt.data);
+        if (data.type === "error" || data.type === "session_full") {
+          // "role already connected" is a transient race with the server
+          // still finalizing our own previous disconnect -- keep retrying
+          // instead of treating it as fatal.
+          const isStaleRoleRace =
+            data.type === "error" && typeof data.message === "string" && data.message.includes("already connected");
+          if (!isStaleRoleRace) terminalErrorRef.current = true;
+        }
         handleServerMessage(data, ws);
       };
       ws.onclose = () => {
@@ -193,10 +313,24 @@ export default function Room() {
         setPhase((p) =>
           ["waiting_partner", "both_ready", "countdown", "captured_wait", "processing"].includes(p) ? "abandoned" : p
         );
+        if (manualCloseRef.current || terminalErrorRef.current) return;
+        scheduleReconnect(chosenRole);
       };
     },
-    [code, handleServerMessage]
+    [code, handleServerMessage, scheduleReconnect]
   );
+
+  useEffect(() => {
+    connectWebSocketRef.current = connectWebSocket;
+  }, [connectWebSocket]);
+
+  const handleManualRetryConnection = () => {
+    reconnectAttemptsRef.current = 0;
+    terminalErrorRef.current = false;
+    setReconnectFailed(false);
+    clearTimeout(reconnectTimeoutRef.current);
+    connectWebSocket(role);
+  };
 
   const enableCameraAndJoin = async (chosenRole) => {
     setEnabling(true);
@@ -337,6 +471,8 @@ export default function Room() {
           <div className="flex flex-col gap-5">
             <CameraStage
               videoRef={videoRef}
+              remoteVideoRef={remoteVideoRef}
+              partnerVideoLive={partnerVideoLive}
               phase={phase}
               countdownValue={countdownValue}
               flash={flash}
@@ -364,12 +500,39 @@ export default function Room() {
                 className="flex flex-col items-center gap-3 text-center border-2 border-[#1A1A19] bg-white p-6"
                 data-testid="abandoned-state"
               >
-                <WifiOff className="text-[#E07A5F]" size={28} />
-                <p className="font-body font-semibold text-[#1A1A19]">
-                  {selfDisconnected
-                    ? "Connection lost. Please refresh the page to try reconnecting."
-                    : "Your partner got disconnected. Ask them to reopen the link. This session will stay open for a little while."}
-                </p>
+                {selfDisconnected && reconnecting && (
+                  <>
+                    <Loader2 className="animate-spin text-[#E07A5F]" size={28} />
+                    <p className="font-body font-semibold text-[#1A1A19]" data-testid="reconnecting-message">
+                      Connection lost. Reconnecting…
+                    </p>
+                  </>
+                )}
+                {selfDisconnected && reconnectFailed && (
+                  <>
+                    <WifiOff className="text-[#E07A5F]" size={28} />
+                    <p className="font-body font-semibold text-[#1A1A19]">
+                      We couldn't reconnect automatically. Check your connection and try again.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleManualRetryConnection}
+                      data-testid="retry-connection-btn"
+                      className={btnPrimary}
+                    >
+                      Retry connection
+                    </button>
+                  </>
+                )}
+                {!selfDisconnected && (
+                  <>
+                    <WifiOff className="text-[#E07A5F]" size={28} />
+                    <p className="font-body font-semibold text-[#1A1A19]">
+                      Your partner got disconnected. Ask them to reopen the link. This session will stay open for a little
+                      while.
+                    </p>
+                  </>
+                )}
               </div>
             )}
 

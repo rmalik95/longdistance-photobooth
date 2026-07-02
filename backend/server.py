@@ -175,6 +175,12 @@ async def handle_message(session: Session, role: str, data: dict):
             if session.state == "both_ready":
                 await broadcast(session, {"type": "both_ready"})
 
+    elif msg_type in ("webrtc_offer", "webrtc_answer", "webrtc_ice_candidate"):
+        # Pure signaling relay for the live peer-to-peer video preview --
+        # the server never inspects or stores SDP/ICE payloads, it just
+        # forwards them to the other participant.
+        await send_to(session, session.other_role(role), data)
+
 
 async def handle_disconnect(session: Session, role: str):
     if role not in session.participants:

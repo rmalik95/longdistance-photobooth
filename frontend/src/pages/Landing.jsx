@@ -131,12 +131,12 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="lg:col-span-2 hidden sm:flex justify-center">
-          <div className="relative -rotate-3 bg-white border-2 border-[#1A1A19] shadow-[8px_8px_0px_0px_rgba(26,26,25,1)] p-4 max-w-xs">
+        <div className="lg:col-span-2 flex justify-center">
+          <div className="relative -rotate-3 bg-white border-2 border-[#1A1A19] shadow-[8px_8px_0px_0px_rgba(26,26,25,1)] p-4 max-w-[220px] sm:max-w-xs">
             <img
               src="https://images.unsplash.com/photo-1617643081052-214d322dc22d?crop=entropy&cs=srgb&fm=jpg&q=85"
               alt="Photo strip moment shared from two places"
-              className="w-full h-72 object-cover"
+              className="w-full h-52 sm:h-72 object-cover"
             />
             <p className="font-accent italic text-center text-lg mt-3 text-[#1A1A19]">together, apart</p>
           </div>
