@@ -55,6 +55,7 @@ export default function Room() {
   const ignoreOfferRef = useRef(false);
   const politeRef = useRef(false);
   const pendingCandidatesRef = useRef([]);
+  const restartConnectionRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -162,6 +163,19 @@ export default function Room() {
     };
     pc.onconnectionstatechange = () => {
       if (["failed", "closed"].includes(pc.connectionState)) setPartnerVideoLive(false);
+      if (pc.connectionState === "failed") {
+        // Rebuild while the signaling channel is still healthy so both sides
+        // re-negotiate instead of staying dark until the next both_ready.
+        // Only the host (impolite side) initiates, and only if this pc is
+        // still the active one and the socket can carry the new offer.
+        if (
+          politeRef.current === false &&
+          pcRef.current === pc &&
+          ws.readyState === WebSocket.OPEN
+        ) {
+          restartConnectionRef.current?.(ws);
+        }
+      }
     };
     pc.onnegotiationneeded = async () => {
       try {
@@ -193,6 +207,13 @@ export default function Room() {
     },
     [createPeerConnection, teardownPeerConnection]
   );
+
+  useEffect(() => {
+    restartConnectionRef.current = (ws) => {
+      teardownPeerConnection();
+      ensurePeerConnection(ws);
+    };
+  }, [ensurePeerConnection, teardownPeerConnection]);
 
   const flushPendingCandidates = useCallback(async (pc) => {
     const pending = pendingCandidatesRef.current;
