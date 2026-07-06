@@ -78,3 +78,41 @@ class TestGetSession:
         resp = api_client.get(f"{BASE_URL}/api/")
         assert resp.status_code == 200
         assert "message" in resp.json()
+
+
+class TestSessionOptions:
+    def test_create_session_with_options(self, api_client):
+        resp = api_client.post(f"{BASE_URL}/api/sessions", json={
+            "countdown_duration": 5, "layout": "1x4", "frame": "film", "filter": "bw",
+        })
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["layout"] == "1x4"
+        assert body["frame"] == "film"
+        assert body["filter"] == "bw"
+        assert body["total_rounds"] == 4
+
+    def test_create_session_defaults_and_invalid_options_fallback(self, api_client):
+        resp = api_client.post(f"{BASE_URL}/api/sessions", json={
+            "countdown_duration": 3, "layout": "9x9", "frame": "gold", "filter": "xray",
+        })
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["layout"] == "1x3"
+        assert body["frame"] == "classic"
+        assert body["filter"] == "warm"
+        assert body["total_rounds"] == 3
+
+        resp2 = api_client.post(f"{BASE_URL}/api/sessions", json={"countdown_duration": 3})
+        assert resp2.json()["layout"] == "1x3"
+
+    def test_session_status_includes_options(self, api_client):
+        code = api_client.post(f"{BASE_URL}/api/sessions", json={
+            "countdown_duration": 3, "layout": "2x2", "frame": "polaroid", "filter": "vintage",
+        }).json()["code"]
+        resp = api_client.get(f"{BASE_URL}/api/sessions/{code}")
+        body = resp.json()
+        assert body["layout"] == "2x2"
+        assert body["frame"] == "polaroid"
+        assert body["filter"] == "vintage"
+        assert body["total_rounds"] == 4

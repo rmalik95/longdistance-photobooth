@@ -9,7 +9,10 @@ from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
 from photo_strip import generate_strip_data_url
-from session_manager import ABANDON_GRACE_SECONDS, ROUND_GAP_SECONDS, Session, manager
+from session_manager import (
+    ABANDON_GRACE_SECONDS, DEFAULT_FILTER, DEFAULT_FRAME, DEFAULT_LAYOUT,
+    LAYOUT_ROUNDS, ROUND_GAP_SECONDS, VALID_FILTERS, VALID_FRAMES, Session, manager,
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -26,6 +29,9 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 class CreateSessionRequest(BaseModel):
     countdown_duration: int = 3
+    layout: str = DEFAULT_LAYOUT
+    frame: str = DEFAULT_FRAME
+    filter: str = DEFAULT_FILTER
 
 
 @api_router.get("/")
@@ -36,8 +42,18 @@ async def root():
 @api_router.post("/sessions")
 async def create_session(payload: CreateSessionRequest):
     duration = payload.countdown_duration if payload.countdown_duration in (3, 5) else 3
-    session = await manager.create_session(duration)
-    return {"code": session.code, "countdown_duration": session.countdown_duration}
+    layout = payload.layout if payload.layout in LAYOUT_ROUNDS else DEFAULT_LAYOUT
+    frame = payload.frame if payload.frame in VALID_FRAMES else DEFAULT_FRAME
+    filter_name = payload.filter if payload.filter in VALID_FILTERS else DEFAULT_FILTER
+    session = await manager.create_session(duration, layout, frame, filter_name)
+    return {
+        "code": session.code,
+        "countdown_duration": session.countdown_duration,
+        "layout": session.layout,
+        "frame": session.frame,
+        "filter": session.filter_name,
+        "total_rounds": session.total_rounds,
+    }
 
 
 @api_router.get("/sessions/{code}")
@@ -49,6 +65,10 @@ async def get_session_status(code: str):
         "exists": True,
         "full": session.both_connected(),
         "countdown_duration": session.countdown_duration,
+        "layout": session.layout,
+        "frame": session.frame,
+        "filter": session.filter_name,
+        "total_rounds": session.total_rounds,
         "state": session.state,
     }
 
@@ -124,7 +144,7 @@ async def finalize_strip(session: Session):
     finally:
         # Discard raw photo bytes from memory immediately -- they are no
         # longer needed once the merge has happened (or failed).
-        session.captures = {1: {}, 2: {}, 3: {}}
+        session.captures = {r: {} for r in range(1, session.total_rounds + 1)}
 
     session.state = "result"
     await broadcast(session, {"type": "strip_ready", "image": data_url})
@@ -238,6 +258,10 @@ async def websocket_endpoint(websocket: WebSocket, code: str, role: str = Query(
             "type": "joined",
             "role": role,
             "countdown_duration": session.countdown_duration,
+            "layout": session.layout,
+            "frame": session.frame,
+            "filter": session.filter_name,
+            "total_rounds": session.total_rounds,
             "partner_connected": other_connected,
             "partner_camera_ready": session.participants.get(other, {}).get("camera_ready", False),
         }
