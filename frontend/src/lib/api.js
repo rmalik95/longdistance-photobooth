@@ -3,8 +3,13 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
 
-export async function createSession(countdownDuration) {
-  const res = await axios.post(`${API}/sessions`, { countdown_duration: countdownDuration });
+export async function createSession({ countdownDuration = 3, layout = "1x3", frame = "classic", filter = "warm" } = {}) {
+  const res = await axios.post(`${API}/sessions`, {
+    countdown_duration: countdownDuration,
+    layout,
+    frame,
+    filter,
+  });
   return res.data;
 }
 

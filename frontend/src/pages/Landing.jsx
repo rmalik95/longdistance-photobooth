@@ -5,6 +5,26 @@ import { toast } from "sonner";
 import PrivacyBanner from "@/components/PrivacyBanner";
 import { createSession, fetchSessionStatus } from "@/lib/api";
 
+const LAYOUTS = [
+  { id: "1x4", label: "1×4", frames: 4, cols: 1 },
+  { id: "1x3", label: "1×3", frames: 3, cols: 1 },
+  { id: "2x2", label: "2×2", frames: 4, cols: 2 },
+  { id: "1x2", label: "1×2", frames: 2, cols: 1 },
+];
+const FRAMES = [
+  { id: "classic", label: "Classic" },
+  { id: "minimal", label: "Minimal" },
+  { id: "film", label: "Film" },
+  { id: "polaroid", label: "Polaroid" },
+];
+const FILTERS = [
+  { id: "warm", label: "Warm" },
+  { id: "none", label: "Natural" },
+  { id: "bw", label: "B&W" },
+  { id: "vintage", label: "Vintage" },
+  { id: "cool", label: "Cool" },
+];
+
 const btnPrimary =
   "bg-[#E07A5F] text-[#FDFBF7] font-bold border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-8 py-4 uppercase tracking-widest disabled:opacity-60 disabled:pointer-events-none";
 const btnSecondary =
@@ -13,6 +33,9 @@ const btnSecondary =
 export default function Landing() {
   const navigate = useNavigate();
   const [duration, setDuration] = useState(3);
+  const [layout, setLayout] = useState("1x3");
+  const [frame, setFrame] = useState("classic");
+  const [filter, setFilter] = useState("warm");
   const [joinCode, setJoinCode] = useState("");
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
@@ -20,7 +43,7 @@ export default function Landing() {
   const handleStartSession = async () => {
     setCreating(true);
     try {
-      const { code } = await createSession(duration);
+      const { code } = await createSession({ countdownDuration: duration, layout, frame, filter });
       localStorage.setItem(`pb_role_${code}`, "host");
       navigate(`/room/${code}`);
     } catch (err) {
@@ -99,6 +122,65 @@ export default function Landing() {
                   >
                     5 sec
                   </button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#4A4A48]">Strip</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {LAYOUTS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setLayout(opt.id)}
+                      data-testid={`layout-option-${opt.id}`}
+                      className={`flex flex-col items-center gap-1.5 border-2 border-[#1A1A19] py-2 font-bold text-xs transition-colors ${
+                        layout === opt.id ? "bg-[#1A1A19] text-[#FDFBF7]" : "bg-white text-[#1A1A19]"
+                      }`}
+                    >
+                      <span className={`grid gap-[2px] ${opt.cols === 2 ? "grid-cols-2" : "grid-cols-1"}`} aria-hidden>
+                        {Array.from({ length: opt.frames }).map((_, i) => (
+                          <span key={i} className={`block w-4 h-[5px] ${layout === opt.id ? "bg-[#FDFBF7]" : "bg-[#1A1A19]"}`} />
+                        ))}
+                      </span>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#4A4A48]">Frame</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {FRAMES.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setFrame(opt.id)}
+                      data-testid={`frame-option-${opt.id}`}
+                      className={`border-2 border-[#1A1A19] py-2 font-bold text-xs transition-colors ${
+                        frame === opt.id ? "bg-[#1A1A19] text-[#FDFBF7]" : "bg-white text-[#1A1A19]"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#4A4A48]">Filter</span>
+                <div className="grid grid-cols-5 gap-2">
+                  {FILTERS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setFilter(opt.id)}
+                      data-testid={`filter-option-${opt.id}`}
+                      className={`border-2 border-[#1A1A19] py-2 font-bold text-[11px] transition-colors ${
+                        filter === opt.id ? "bg-[#1A1A19] text-[#FDFBF7]" : "bg-white text-[#1A1A19]"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
               <button type="button" onClick={handleStartSession} disabled={creating} data-testid="start-session-btn" className={btnPrimary}>
