@@ -13,6 +13,7 @@ const btnPrimary =
   "bg-[#E07A5F] text-[#FDFBF7] font-bold border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-8 py-4 uppercase tracking-widest disabled:opacity-60 disabled:pointer-events-none";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+const MAX_CAPTURE_WIDTH = 640;
 const MAX_RECONNECT_ATTEMPTS = 6;
 const BASE_RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_DELAY_MS = 10000;
@@ -31,6 +32,8 @@ export default function Room() {
   const [partnerCameraReady, setPartnerCameraReady] = useState(false);
   const [waitingForPartnerShot, setWaitingForPartnerShot] = useState(false);
   const [resultImage, setResultImage] = useState(null);
+  const [filterName, setFilterName] = useState("warm");
+  const [applyingFilter, setApplyingFilter] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [flash, setFlash] = useState(false);
   const [enabling, setEnabling] = useState(false);
@@ -118,15 +121,21 @@ export default function Room() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video) return;
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
+    // Downscale before sending: the strip renders each photo at ~200px wide,
+    // and full-resolution frames produce multi-MB WebSocket messages that
+    // hosting proxies drop, stranding the partner mid-round.
+    const srcW = video.videoWidth || 640;
+    const srcH = video.videoHeight || 480;
+    const scale = Math.min(1, MAX_CAPTURE_WIDTH / srcW);
+    canvas.width = Math.round(srcW * scale);
+    canvas.height = Math.round(srcH * scale);
     const ctx = canvas.getContext("2d");
     ctx.save();
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     ctx.restore();
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
     setFlash(true);
     setTimeout(() => setFlash(false), 500);
@@ -328,6 +337,8 @@ export default function Room() {
           break;
         case "strip_ready":
           setResultImage(data.image);
+          if (data.filter) setFilterName(data.filter);
+          setApplyingFilter(false);
           setPhase("result");
           break;
         case "retake_started":
@@ -445,6 +456,14 @@ export default function Room() {
   const handleRetake = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "retake" }));
+    }
+  };
+
+  const handleSetFilter = (f) => {
+    if (f === filterName || applyingFilter) return;
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      setApplyingFilter(true);
+      wsRef.current.send(JSON.stringify({ type: "set_filter", filter: f }));
     }
   };
 
@@ -628,7 +647,14 @@ export default function Room() {
         )}
 
         {phase === "result" && resultImage && (
-          <ResultPanel image={resultImage} onDownload={handleDownload} onRetake={handleRetake} />
+          <ResultPanel
+            image={resultImage}
+            onDownload={handleDownload}
+            onRetake={handleRetake}
+            filterName={filterName}
+            onChangeFilter={handleSetFilter}
+            applyingFilter={applyingFilter}
+          />
         )}
       </div>
     </div>

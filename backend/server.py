@@ -129,30 +129,32 @@ async def schedule_capture(session: Session, expected_round: int, duration: floa
         await broadcast(session, {"type": "capture_now", "round": expected_round})
 
 
+async def render_strip(session: Session) -> str:
+    host_photos = [session.captures[r]["host"] for r in range(1, session.total_rounds + 1)]
+    guest_photos = [session.captures[r]["guest"] for r in range(1, session.total_rounds + 1)]
+    return await asyncio.to_thread(
+        generate_strip_data_url, host_photos, guest_photos,
+        session.layout, session.frame, session.filter_name,
+    )
+
+
 async def finalize_strip(session: Session):
     session.state = "processing"
     await broadcast(session, {"type": "processing"})
     try:
-        host_photos = [session.captures[r]["host"] for r in range(1, session.total_rounds + 1)]
-        guest_photos = [session.captures[r]["guest"] for r in range(1, session.total_rounds + 1)]
-        data_url = await asyncio.to_thread(
-            generate_strip_data_url, host_photos, guest_photos,
-            session.layout, session.frame, session.filter_name,
-        )
+        data_url = await render_strip(session)
     except Exception as exc:
         logger.error("Failed to generate photo strip: %s", exc)
         await broadcast(session, {"type": "error", "message": "Could not generate the photo strip. Please retake."})
+        # Discard raw photo bytes -- useless after a failed merge.
         session.reset_for_retake()
         return
-    finally:
-        # Discard raw photo bytes from memory immediately -- they are no
-        # longer needed once the merge has happened (or failed).
-        session.captures = {r: {} for r in range(1, session.total_rounds + 1)}
 
     session.state = "result"
-    await broadcast(session, {"type": "strip_ready", "image": data_url})
-    # The image has already been delivered to both clients; drop our
-    # reference so nothing lingers server-side.
+    await broadcast(session, {"type": "strip_ready", "image": data_url, "filter": session.filter_name})
+    # Captures stay in memory (never on disk) while the result is shown so a
+    # different filter can be applied to them; they are purged on retake,
+    # reconnect reset, or session removal.
     del data_url
 
 
@@ -197,6 +199,19 @@ async def handle_message(session: Session, role: str, data: dict):
             await broadcast(session, {"type": "retake_started"})
             if session.state == "both_ready":
                 await broadcast(session, {"type": "both_ready"})
+
+    elif msg_type == "set_filter":
+        new_filter = data.get("filter")
+        if session.state != "result" or new_filter not in VALID_FILTERS or new_filter == session.filter_name:
+            return
+        session.filter_name = new_filter
+        try:
+            data_url = await render_strip(session)
+        except Exception as exc:
+            logger.error("Failed to re-render photo strip: %s", exc)
+            await send_to(session, role, {"type": "error", "message": "Could not apply that filter. Please retake."})
+            return
+        await broadcast(session, {"type": "strip_ready", "image": data_url, "filter": session.filter_name})
 
     elif msg_type in ("webrtc_offer", "webrtc_answer", "webrtc_ice_candidate"):
         # Pure signaling relay for the live peer-to-peer video preview --

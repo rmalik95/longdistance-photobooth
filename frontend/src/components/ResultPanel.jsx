@@ -1,8 +1,16 @@
 import { useState } from "react";
-import { Download, RotateCcw, Eye } from "lucide-react";
+import { Download, RotateCcw, Eye, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-export default function ResultPanel({ image, onDownload, onRetake }) {
+const FILTERS = [
+  { id: "warm", label: "Warm" },
+  { id: "none", label: "Natural" },
+  { id: "bw", label: "B&W" },
+  { id: "vintage", label: "Vintage" },
+  { id: "cool", label: "Cool" },
+];
+
+export default function ResultPanel({ image, onDownload, onRetake, filterName, onChangeFilter, applyingFilter }) {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const btnBase =
@@ -15,7 +23,30 @@ export default function ResultPanel({ image, onDownload, onRetake }) {
         alt="Your photo strip"
         className="max-h-[70vh] w-auto max-w-full border-2 border-[#1A1A19] shadow-[6px_6px_0px_0px_rgba(26,26,25,1)]"
         data-testid="result-strip-image"
+        style={applyingFilter ? { opacity: 0.6 } : undefined}
       />
+
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-[#4A4A48] flex items-center gap-2">
+          Filter {applyingFilter && <Loader2 className="animate-spin" size={12} />}
+        </span>
+        <div className="flex flex-wrap justify-center gap-2">
+          {FILTERS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onChangeFilter(opt.id)}
+              disabled={applyingFilter}
+              data-testid={`filter-option-${opt.id}`}
+              className={`border-2 border-[#1A1A19] px-4 py-2 font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-60 ${
+                filterName === opt.id ? "bg-[#1A1A19] text-[#FDFBF7]" : "bg-white text-[#1A1A19]"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="flex flex-wrap items-center justify-center gap-4">
         <button

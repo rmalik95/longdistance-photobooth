@@ -17,14 +17,6 @@ const FRAMES = [
   { id: "film", label: "Film" },
   { id: "polaroid", label: "Polaroid" },
 ];
-const FILTERS = [
-  { id: "warm", label: "Warm" },
-  { id: "none", label: "Natural" },
-  { id: "bw", label: "B&W" },
-  { id: "vintage", label: "Vintage" },
-  { id: "cool", label: "Cool" },
-];
-
 const btnPrimary =
   "bg-[#E07A5F] text-[#FDFBF7] font-bold border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-8 py-4 uppercase tracking-widest disabled:opacity-60 disabled:pointer-events-none";
 const btnSecondary =
@@ -35,7 +27,6 @@ export default function Landing() {
   const [duration, setDuration] = useState(3);
   const [layout, setLayout] = useState("1x3");
   const [frame, setFrame] = useState("classic");
-  const [filter, setFilter] = useState("warm");
   const [joinCode, setJoinCode] = useState("");
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
@@ -43,7 +34,7 @@ export default function Landing() {
   const handleStartSession = async () => {
     setCreating(true);
     try {
-      const { code } = await createSession({ countdownDuration: duration, layout, frame, filter });
+      const { code } = await createSession({ countdownDuration: duration, layout, frame });
       localStorage.setItem(`pb_role_${code}`, "host");
       navigate(`/room/${code}`);
     } catch (err) {
@@ -158,24 +149,6 @@ export default function Landing() {
                       data-testid={`frame-option-${opt.id}`}
                       className={`border-2 border-[#1A1A19] py-2 font-bold text-xs transition-colors ${
                         frame === opt.id ? "bg-[#1A1A19] text-[#FDFBF7]" : "bg-white text-[#1A1A19]"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#4A4A48]">Filter</span>
-                <div className="grid grid-cols-5 gap-2">
-                  {FILTERS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setFilter(opt.id)}
-                      data-testid={`filter-option-${opt.id}`}
-                      className={`border-2 border-[#1A1A19] py-2 font-bold text-[11px] transition-colors ${
-                        filter === opt.id ? "bg-[#1A1A19] text-[#FDFBF7]" : "bg-white text-[#1A1A19]"
                       }`}
                     >
                       {opt.label}

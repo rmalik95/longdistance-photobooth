@@ -120,6 +120,77 @@ class TestWebrtcSignalingRelay:
         asyncio.run(run())
 
 
+def _tiny_photo(color):
+    import base64
+    from io import BytesIO
+
+    from PIL import Image
+
+    img = Image.new("RGB", (64, 48), color)
+    buf = BytesIO()
+    img.save(buf, format="JPEG")
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
+def create_session_with_options(**options):
+    resp = requests.post(f"{BASE_URL}/api/sessions", json={"countdown_duration": 3, **options})
+    resp.raise_for_status()
+    return resp.json()["code"]
+
+
+async def run_capture_flow(host, guest, rounds):
+    """Drive both participants through all rounds and return the strip_ready messages."""
+    for r in range(1, rounds + 1):
+        if r > 1:
+            # server starts the next round's countdown after the inter-round gap
+            await recv_until(host, "countdown_start", max_messages=20)
+            await recv_until(guest, "countdown_start", max_messages=20)
+        await host.send(json.dumps({"type": "photo_captured", "round": r, "image": _tiny_photo("red")}))
+        await guest.send(json.dumps({"type": "photo_captured", "round": r, "image": _tiny_photo("blue")}))
+    host_result = await recv_until(host, "strip_ready", max_messages=20)
+    guest_result = await recv_until(guest, "strip_ready", max_messages=20)
+    return host_result, guest_result
+
+
+class TestFilterAfterShots:
+    def test_set_filter_regenerates_strip_for_both(self):
+        async def run():
+            code = create_session_with_options(layout="1x2")
+            host, guest = await join_and_reach_both_ready(code)
+            host_result, guest_result = await run_capture_flow(host, guest, rounds=2)
+            assert host_result["image"].startswith("data:image/jpeg;base64,")
+            assert host_result["filter"] == "warm"
+
+            await guest.send(json.dumps({"type": "set_filter", "filter": "bw"}))
+            new_host = await recv_until(host, "strip_ready", max_messages=20)
+            new_guest = await recv_until(guest, "strip_ready", max_messages=20)
+            assert new_host["filter"] == "bw"
+            assert new_guest["filter"] == "bw"
+            assert new_host["image"] != host_result["image"]
+
+            await host.close()
+            await guest.close()
+
+        asyncio.run(run())
+
+    def test_invalid_filter_is_ignored(self):
+        async def run():
+            code = create_session_with_options(layout="1x2")
+            host, guest = await join_and_reach_both_ready(code)
+            await run_capture_flow(host, guest, rounds=2)
+
+            await guest.send(json.dumps({"type": "set_filter", "filter": "xray"}))
+            # prove the socket is still alive and no strip_ready was emitted for the bad filter
+            await guest.send(json.dumps({"type": "set_filter", "filter": "cool"}))
+            new_guest = await recv_until(guest, "strip_ready", max_messages=20)
+            assert new_guest["filter"] == "cool"
+
+            await host.close()
+            await guest.close()
+
+        asyncio.run(run())
+
+
 class TestReconnect:
     def test_reconnect_after_disconnect_restores_both_ready(self):
         async def run():
