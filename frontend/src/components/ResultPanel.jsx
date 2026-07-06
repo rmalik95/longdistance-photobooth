@@ -9,10 +9,13 @@ export default function ResultPanel({ image, onDownload, onRetake }) {
     "flex items-center gap-2 border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] hover:shadow-[2px_2px_0px_0px_rgba(26,26,25,1)] hover:translate-y-[2px] hover:translate-x-[2px] transition-all px-6 py-3 uppercase tracking-widest text-sm font-bold";
 
   return (
-    <div className="flex flex-col items-center gap-8 animate-strip-reveal" data-testid="result-panel">
-      <div className="bg-white border-2 border-[#1A1A19] shadow-[6px_6px_0px_0px_rgba(26,26,25,1)] p-3 sm:p-4 max-w-sm">
-        <img src={image} alt="Your photo strip" className="w-full h-auto" data-testid="result-strip-image" />
-      </div>
+    <div className="flex flex-col items-center gap-5 animate-strip-reveal" data-testid="result-panel">
+      <img
+        src={image}
+        alt="Your photo strip"
+        className="max-h-[70vh] w-auto max-w-full border-2 border-[#1A1A19] shadow-[6px_6px_0px_0px_rgba(26,26,25,1)]"
+        data-testid="result-strip-image"
+      />
 
       <div className="flex flex-wrap items-center justify-center gap-4">
         <button

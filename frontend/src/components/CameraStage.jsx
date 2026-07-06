@@ -26,7 +26,7 @@ export default function CameraStage({
       data-testid="camera-stage"
     >
       <div
-        className="relative flex-1 border-b-2 sm:border-b-0 sm:border-r-2 border-[#1A1A19] overflow-hidden"
+        className="relative flex-1 border-b sm:border-b-0 sm:border-r border-[#1A1A19] overflow-hidden"
         data-testid="camera-video-container"
       >
         <video
@@ -104,6 +104,12 @@ export default function CameraStage({
           </div>
         )}
       </div>
+
+      {["both_ready", "countdown", "captured_wait"].includes(phase) && (
+        <span className="absolute top-3 right-3 z-30 bg-[#1A1A19] text-[#FDFBF7] border-2 border-[#1A1A19] px-3 py-1 text-xs font-heading font-bold uppercase tracking-wider">
+          Shot {round}/{totalRounds}
+        </span>
+      )}
 
       {phase === "countdown" && <CountdownOverlay value={countdownValue} />}
     </div>
