@@ -26,7 +26,7 @@ export default function Room() {
   const [countdownDuration, setCountdownDuration] = useState(3);
   const [countdownValue, setCountdownValue] = useState(null);
   const [round, setRound] = useState(1);
-  const totalRounds = 3;
+  const [totalRounds, setTotalRounds] = useState(3);
   const [partnerConnected, setPartnerConnected] = useState(false);
   const [partnerCameraReady, setPartnerCameraReady] = useState(false);
   const [waitingForPartnerShot, setWaitingForPartnerShot] = useState(false);
@@ -51,6 +51,10 @@ export default function Room() {
   const manualCloseRef = useRef(false);
   const terminalErrorRef = useRef(false);
   const connectWebSocketRef = useRef(null);
+  const makingOfferRef = useRef(false);
+  const ignoreOfferRef = useRef(false);
+  const politeRef = useRef(false);
+  const pendingCandidatesRef = useRef([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +63,7 @@ export default function Room() {
         const status = await fetchSessionStatus(code);
         if (cancelled) return;
         setCountdownDuration(status.countdown_duration);
+        if (status.total_rounds) setTotalRounds(status.total_rounds);
         const storedRole = localStorage.getItem(`pb_role_${code}`);
         if (storedRole) {
           setRole(storedRole);
@@ -133,9 +138,13 @@ export default function Room() {
 
   const teardownPeerConnection = useCallback(() => {
     if (pcRef.current) {
+      pcRef.current.onnegotiationneeded = null;
       pcRef.current.close();
       pcRef.current = null;
     }
+    makingOfferRef.current = false;
+    ignoreOfferRef.current = false;
+    pendingCandidatesRef.current = [];
     setPartnerVideoLive(false);
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
   }, []);
@@ -152,8 +161,19 @@ export default function Room() {
       setPartnerVideoLive(true);
     };
     pc.onconnectionstatechange = () => {
-      if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
-        setPartnerVideoLive(false);
+      if (["failed", "closed"].includes(pc.connectionState)) setPartnerVideoLive(false);
+    };
+    pc.onnegotiationneeded = async () => {
+      try {
+        makingOfferRef.current = true;
+        await pc.setLocalDescription();
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "webrtc_offer", sdp: pc.localDescription }));
+        }
+      } catch (err) {
+        console.error("negotiation failed", err);
+      } finally {
+        makingOfferRef.current = false;
       }
     };
     if (streamRef.current) {
@@ -162,28 +182,85 @@ export default function Room() {
     return pc;
   }, []);
 
-  const startWebrtcOffer = useCallback(
-    async (ws) => {
+  const ensurePeerConnection = useCallback(
+    (ws) => {
+      if (pcRef.current && !["failed", "closed"].includes(pcRef.current.connectionState)) {
+        return pcRef.current;
+      }
       teardownPeerConnection();
-      const pc = createPeerConnection(ws);
-      pcRef.current = pc;
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      ws.send(JSON.stringify({ type: "webrtc_offer", sdp: offer }));
+      pcRef.current = createPeerConnection(ws);
+      return pcRef.current;
     },
     [createPeerConnection, teardownPeerConnection]
   );
 
-  const isPeerConnectionUsable = () =>
-    pcRef.current && !["failed", "disconnected", "closed"].includes(pcRef.current.connectionState);
+  const flushPendingCandidates = useCallback(async (pc) => {
+    const pending = pendingCandidatesRef.current;
+    pendingCandidatesRef.current = [];
+    for (const candidate of pending) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        if (!ignoreOfferRef.current) console.warn("addIceCandidate failed", err);
+      }
+    }
+  }, []);
+
+  const handleOffer = useCallback(
+    async (sdp, ws) => {
+      const pc = ensurePeerConnection(ws);
+      const offerCollision = makingOfferRef.current || pc.signalingState !== "stable";
+      ignoreOfferRef.current = !politeRef.current && offerCollision;
+      if (ignoreOfferRef.current) return;
+      if (offerCollision) {
+        await Promise.all([
+          pc.setLocalDescription({ type: "rollback" }),
+          pc.setRemoteDescription(new RTCSessionDescription(sdp)),
+        ]);
+      } else {
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+      }
+      await flushPendingCandidates(pc);
+      await pc.setLocalDescription();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "webrtc_answer", sdp: pc.localDescription }));
+      }
+    },
+    [ensurePeerConnection, flushPendingCandidates]
+  );
+
+  const handleAnswer = useCallback(
+    async (sdp) => {
+      const pc = pcRef.current;
+      if (!pc) return;
+      await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+      await flushPendingCandidates(pc);
+    },
+    [flushPendingCandidates]
+  );
+
+  const handleRemoteCandidate = useCallback(async (candidate) => {
+    const pc = pcRef.current;
+    if (!pc || !pc.remoteDescription) {
+      pendingCandidatesRef.current.push(candidate);
+      return;
+    }
+    try {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (err) {
+      if (!ignoreOfferRef.current) console.warn("addIceCandidate failed", err);
+    }
+  }, []);
 
   const handleServerMessage = useCallback(
     (data, ws) => {
       switch (data.type) {
         case "joined":
+          politeRef.current = data.role === "guest";
           setPartnerConnected(data.partner_connected);
           setPartnerCameraReady(data.partner_camera_ready);
           setCountdownDuration(data.countdown_duration);
+          if (data.total_rounds) setTotalRounds(data.total_rounds);
           ws.send(JSON.stringify({ type: "camera_ready" }));
           break;
         case "partner_joined":
@@ -192,6 +269,7 @@ export default function Room() {
         case "partner_reconnected":
           setPartnerConnected(true);
           setPhase((p) => (p === "abandoned" ? "waiting_partner" : p));
+          teardownPeerConnection(); // clean renegotiation on next both_ready
           break;
         case "partner_camera_ready":
           setPartnerCameraReady(true);
@@ -199,30 +277,17 @@ export default function Room() {
         case "both_ready":
           setWaitingForPartnerShot(false);
           setPhase("both_ready");
-          if (role === "host" && !isPeerConnectionUsable()) {
-            startWebrtcOffer(ws);
-          }
+          // Host initiates; addTrack in ensurePeerConnection fires onnegotiationneeded.
+          if (role === "host") ensurePeerConnection(ws);
           break;
         case "webrtc_offer":
-          teardownPeerConnection();
-          {
-            const pc = createPeerConnection(ws);
-            pcRef.current = pc;
-            (async () => {
-              await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
-              const answer = await pc.createAnswer();
-              await pc.setLocalDescription(answer);
-              ws.send(JSON.stringify({ type: "webrtc_answer", sdp: answer }));
-            })();
-          }
+          handleOffer(data.sdp, ws).catch((err) => console.error("offer handling failed", err));
           break;
         case "webrtc_answer":
-          if (pcRef.current) pcRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
+          handleAnswer(data.sdp).catch((err) => console.error("answer handling failed", err));
           break;
         case "webrtc_ice_candidate":
-          if (pcRef.current && data.candidate) {
-            pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(() => {});
-          }
+          if (data.candidate) handleRemoteCandidate(data.candidate);
           break;
         case "countdown_start":
           setRound(data.round);
@@ -265,7 +330,7 @@ export default function Room() {
           break;
       }
     },
-    [runLocalCountdown, capturePhoto, role, startWebrtcOffer, createPeerConnection, teardownPeerConnection]
+    [runLocalCountdown, capturePhoto, role, ensurePeerConnection, handleOffer, handleAnswer, handleRemoteCandidate, teardownPeerConnection]
   );
 
   const scheduleReconnect = useCallback((chosenRole) => {
@@ -309,6 +374,7 @@ export default function Room() {
         handleServerMessage(data, ws);
       };
       ws.onclose = () => {
+        teardownPeerConnection();
         setSelfDisconnected(true);
         setPhase((p) =>
           ["waiting_partner", "both_ready", "countdown", "captured_wait", "processing"].includes(p) ? "abandoned" : p
@@ -317,7 +383,7 @@ export default function Room() {
         scheduleReconnect(chosenRole);
       };
     },
-    [code, handleServerMessage, scheduleReconnect]
+    [code, handleServerMessage, scheduleReconnect, teardownPeerConnection]
   );
 
   useEffect(() => {
