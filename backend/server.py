@@ -135,7 +135,10 @@ async def finalize_strip(session: Session):
     try:
         host_photos = [session.captures[r]["host"] for r in range(1, session.total_rounds + 1)]
         guest_photos = [session.captures[r]["guest"] for r in range(1, session.total_rounds + 1)]
-        data_url = await asyncio.to_thread(generate_strip_data_url, host_photos, guest_photos)
+        data_url = await asyncio.to_thread(
+            generate_strip_data_url, host_photos, guest_photos,
+            session.layout, session.frame, session.filter_name,
+        )
     except Exception as exc:
         logger.error("Failed to generate photo strip: %s", exc)
         await broadcast(session, {"type": "error", "message": "Could not generate the photo strip. Please retake."})
