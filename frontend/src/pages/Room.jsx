@@ -130,11 +130,10 @@ export default function Room() {
     canvas.width = Math.round(srcW * scale);
     canvas.height = Math.round(srcH * scale);
     const ctx = canvas.getContext("2d");
-    ctx.save();
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    // Capture unmirrored: the on-screen preview is flipped (selfie
+    // convention), but the photo itself must read true so signs and text
+    // aren't reversed on the partner's side of the strip.
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    ctx.restore();
     const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
     setFlash(true);
