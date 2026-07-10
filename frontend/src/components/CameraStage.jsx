@@ -22,11 +22,11 @@ export default function CameraStage({
 
   return (
     <div
-      className="relative flex flex-col sm:flex-row w-full h-[52vh] sm:h-[70vh] border-2 border-[#1A1A19] bg-[#1A1A19] overflow-hidden"
+      className="relative flex flex-col sm:flex-row w-full h-[52vh] sm:h-[70vh] rounded-2xl bg-ink shadow-soft-lg overflow-hidden"
       data-testid="camera-stage"
     >
       <div
-        className="relative flex-1 border-b sm:border-b-0 sm:border-r border-[#1A1A19] overflow-hidden"
+        className="relative flex-1 border-b sm:border-b-0 sm:border-r border-ink/20 overflow-hidden"
         data-testid="camera-video-container"
       >
         <video
@@ -38,13 +38,13 @@ export default function CameraStage({
           style={{ transform: "scaleX(-1)" }}
           data-testid="camera-video"
         />
-        <span className="absolute top-3 left-3 bg-[#FDFBF7] border-2 border-[#1A1A19] px-3 py-1 text-xs font-heading font-bold uppercase tracking-wider">
+        <span className="absolute top-3 left-3 rounded-full bg-cream/90 backdrop-blur-sm px-3 py-1 text-xs font-medium text-ink">
           You
         </span>
         {flash && <div className="absolute inset-0 bg-white camera-flash-effect z-40" data-testid="camera-flash" />}
       </div>
 
-      <div className="relative flex-1 flex flex-col items-center justify-center gap-3 bg-[#FDFBF7]" data-testid="partner-status-panel">
+      <div className="relative flex-1 flex flex-col items-center justify-center gap-3 bg-cream" data-testid="partner-status-panel">
         <video
           ref={remoteVideoRef}
           autoPlay
@@ -54,32 +54,32 @@ export default function CameraStage({
           data-testid="partner-video"
         />
         {showPartnerVideo && (
-          <span className="absolute top-3 left-3 bg-[#FDFBF7] border-2 border-[#1A1A19] px-3 py-1 text-xs font-heading font-bold uppercase tracking-wider">
+          <span className="absolute top-3 left-3 rounded-full bg-cream/90 backdrop-blur-sm px-3 py-1 text-xs font-medium text-ink">
             Partner
           </span>
         )}
 
         {!showPartnerVideo && partnerState === "waiting" && (
           <>
-            <UserPlus className="text-[#F2CC8F] animate-pulse-soft" size={40} strokeWidth={2.5} />
-            <p className="font-body font-semibold text-[#1A1A19] text-sm sm:text-base text-center px-4">
-              Waiting for your partner to join…
+            <UserPlus className="text-gold animate-pulse-soft" size={40} strokeWidth={2.5} />
+            <p className="font-body font-medium text-ink text-sm sm:text-base text-center px-4">
+              Waiting for your person to arrive…
             </p>
           </>
         )}
         {!showPartnerVideo && partnerState === "connecting" && (
           <>
-            <Camera className="text-[#F2CC8F] animate-pulse-soft" size={40} strokeWidth={2.5} />
-            <p className="font-body font-semibold text-[#1A1A19] text-sm sm:text-base text-center px-4">
-              Partner connected, turning on their camera…
+            <Camera className="text-gold animate-pulse-soft" size={40} strokeWidth={2.5} />
+            <p className="font-body font-medium text-ink text-sm sm:text-base text-center px-4">
+              They're here! Turning on their camera…
             </p>
           </>
         )}
         {!showPartnerVideo && partnerState === "ready" && phase !== "captured_wait" && (
           <>
-            <CheckCircle2 className="text-[#81B29A]" size={40} strokeWidth={2.5} />
-            <p className="font-body font-semibold text-[#1A1A19] text-sm sm:text-base text-center px-4">
-              Your partner is ready
+            <CheckCircle2 className="text-sage" size={40} strokeWidth={2.5} />
+            <p className="font-body font-medium text-ink text-sm sm:text-base text-center px-4">
+              They're ready when you are
             </p>
           </>
         )}
@@ -87,14 +87,14 @@ export default function CameraStage({
           <div
             className={
               showPartnerVideo
-                ? "absolute inset-x-0 bottom-0 bg-[#1A1A19]/80 py-2 flex items-center justify-center gap-2"
+                ? "absolute inset-x-0 bottom-0 bg-ink/80 py-2 flex items-center justify-center gap-2"
                 : "flex flex-col items-center gap-3"
             }
           >
-            <Clock className={`${showPartnerVideo ? "text-[#F2CC8F]" : "text-[#E07A5F]"} animate-pulse-soft`} size={showPartnerVideo ? 18 : 40} strokeWidth={2.5} />
+            <Clock className={`${showPartnerVideo ? "text-gold" : "text-coral"} animate-pulse-soft`} size={showPartnerVideo ? 18 : 40} strokeWidth={2.5} />
             <p
-              className={`font-body font-semibold text-sm sm:text-base text-center px-4 ${
-                showPartnerVideo ? "text-[#FDFBF7]" : "text-[#1A1A19]"
+              className={`font-body font-medium text-sm sm:text-base text-center px-4 ${
+                showPartnerVideo ? "text-cream" : "text-ink"
               }`}
             >
               {waitingForPartnerShot
@@ -106,7 +106,7 @@ export default function CameraStage({
       </div>
 
       {["both_ready", "countdown", "captured_wait"].includes(phase) && (
-        <span className="absolute top-3 right-3 z-30 bg-[#1A1A19] text-[#FDFBF7] border-2 border-[#1A1A19] px-3 py-1 text-xs font-heading font-bold uppercase tracking-wider">
+        <span className="absolute top-3 right-3 z-30 rounded-full bg-ink/80 text-cream backdrop-blur-sm px-3 py-1 text-xs font-medium">
           Shot {round}/{totalRounds}
         </span>
       )}

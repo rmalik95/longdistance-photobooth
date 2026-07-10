@@ -18,9 +18,9 @@ export default function SessionCodeBadge({ code }) {
   };
 
   return (
-    <div className="flex items-center gap-3 bg-white border-2 border-[#1A1A19] shadow-[4px_4px_0px_0px_rgba(26,26,25,1)] px-4 py-2.5">
+    <div className="flex items-center gap-3 bg-white rounded-full shadow-soft border border-ink/5 px-4 py-2.5">
       <span
-        className="font-heading font-black text-lg tracking-[0.15em] text-[#1A1A19]"
+        className="font-heading font-black text-lg tracking-[0.15em] text-ink"
         data-testid="session-code-display"
       >
         {code}
@@ -29,7 +29,7 @@ export default function SessionCodeBadge({ code }) {
         type="button"
         onClick={copyLink}
         data-testid="copy-link-btn"
-        className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#E07A5F] hover:text-[#1A1A19] transition-colors"
+        className="flex items-center gap-1.5 text-xs font-medium text-coral hover:text-coral-dark transition-colors"
       >
         {copied ? <Check size={14} /> : <Copy size={14} />}
         {copied ? "Copied" : "Copy link"}
