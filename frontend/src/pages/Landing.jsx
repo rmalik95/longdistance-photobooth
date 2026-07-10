@@ -6,7 +6,10 @@ import PrivacyBanner from "@/components/PrivacyBanner";
 import SampleStrip from "@/components/SampleStrip";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { createSession, fetchSessionStatus } from "@/lib/api";
-import { btnPrimary, btnSecondary, card, chip } from "@/lib/ui";
+import { btnPrimary, btnSecondary, card, chip, chipTight } from "@/lib/ui";
+import sunsetJump from "@/assets/samples/sunset-jump.jpg";
+import cameraToss from "@/assets/samples/camera-toss.jpg";
+import balloonsWalk from "@/assets/samples/balloons-walk.jpg";
 
 const LAYOUTS = [
   { id: "1x4", label: "1×4", frames: 4, cols: 1 },
@@ -150,14 +153,14 @@ export default function Landing() {
                   </div>
                   <div className="flex flex-col gap-2">
                     <span className="text-sm font-medium text-warmgray">Strip</span>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {LAYOUTS.map((opt) => (
                         <button
                           key={opt.id}
                           type="button"
                           onClick={() => setLayout(opt.id)}
                           data-testid={`layout-option-${opt.id}`}
-                          className={`flex flex-col items-center gap-1.5 !px-2 ${chip(layout === opt.id)}`}
+                          className={`flex-col gap-1.5 ${chipTight(layout === opt.id)}`}
                         >
                           <span className={`grid gap-[2px] ${opt.cols === 2 ? "grid-cols-2" : "grid-cols-1"}`} aria-hidden>
                             {Array.from({ length: opt.frames }).map((_, i) => (
@@ -171,14 +174,14 @@ export default function Landing() {
                   </div>
                   <div className="flex flex-col gap-2">
                     <span className="text-sm font-medium text-warmgray">Frame</span>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {FRAMES.map((opt) => (
                         <button
                           key={opt.id}
                           type="button"
                           onClick={() => setFrame(opt.id)}
                           data-testid={`frame-option-${opt.id}`}
-                          className={`!px-2 ${chip(frame === opt.id)}`}
+                          className={chipTight(frame === opt.id)}
                         >
                           {opt.label}
                         </button>
@@ -211,10 +214,10 @@ export default function Landing() {
         </div>
 
         <div className="lg:col-span-2 flex justify-center">
-          <div className="relative h-[380px] sm:h-[460px] w-[260px] sm:w-[320px] pointer-events-none select-none">
-            <SampleStrip frames={3} rotate={4} variant="sage" caption="" className="absolute right-0 top-10" />
-            <SampleStrip frames={4} rotate={-5} variant="warm" caption="miss you!" className="absolute left-0 top-0" />
-            <SampleStrip frames={2} rotate={2} variant="gold" caption="date night" className="absolute right-0 bottom-0" />
+          <div className="relative h-[420px] sm:h-[500px] w-[300px] sm:w-[360px] pointer-events-none select-none">
+            <SampleStrip src={cameraToss} rotate={4} caption="" className="absolute right-0 top-14" />
+            <SampleStrip src={sunsetJump} rotate={-6} caption="date night!" className="absolute left-0 top-0" />
+            <SampleStrip src={balloonsWalk} rotate={3} caption="miss you!" className="absolute left-8 sm:left-16 bottom-0" />
           </div>
         </div>
       </div>

@@ -505,8 +505,8 @@ export default function Room() {
             <AlertTriangle className="text-coral" size={36} />
             <h2 className="font-heading text-2xl font-bold text-ink">We couldn't find that session</h2>
             <p className="font-body text-warmgray max-w-sm">
-              This link may have expired, or the code might have a typo. Sessions close themselves once you're both done —
-              starting a fresh one takes a few seconds.
+              This link may have expired, or the code might have a typo. Sessions close themselves once you're both done,
+              so starting a fresh one takes a few seconds.
             </p>
             <button type="button" onClick={() => navigate("/")} className={btnPrimary} data-testid="not-found-home-btn">
               Start a new session
@@ -608,7 +608,7 @@ export default function Room() {
                   <>
                     <Loader2 className="animate-spin text-coral" size={28} />
                     <p className="font-body font-medium text-ink" data-testid="reconnecting-message">
-                      Lost you for a second — reconnecting…
+                      Lost you for a second, reconnecting…
                     </p>
                   </>
                 )}
@@ -632,7 +632,7 @@ export default function Room() {
                   <>
                     <WifiOff className="text-coral" size={28} />
                     <p className="font-body font-medium text-ink">
-                      Looks like your partner's connection dropped. Sit tight — the moment they reopen the link, you'll
+                      Looks like your partner's connection dropped. Sit tight, the moment they reopen the link, you'll
                       pick up right where you left off.
                     </p>
                   </>
