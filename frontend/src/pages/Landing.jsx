@@ -30,7 +30,7 @@ const HOW_IT_WORKS = [
   {
     icon: Camera,
     title: "Count down together",
-    body: "Both cameras on — the countdown snaps you both at the same moment.",
+    body: "Both cameras on - the countdown snaps you both at the same moment.",
   },
   {
     icon: Download,
@@ -78,7 +78,7 @@ export default function Landing() {
       localStorage.setItem(`pb_role_${code}`, "guest");
       navigate(`/room/${code}`);
     } catch (err) {
-      toast.error("That code didn't match a session. Check for typos — or ask them to resend the link.");
+      toast.error("That code didn't match a session. Check for typos - or ask them to resend the link.");
       setJoining(false);
     }
   };

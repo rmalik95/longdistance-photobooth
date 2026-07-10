@@ -8,7 +8,7 @@ export default function PrivacyBanner({ compact = false }) {
     >
       <ShieldCheck className="shrink-0 text-sage" size={compact ? 18 : 22} strokeWidth={2.5} />
       <p className={`font-body font-medium text-ink ${compact ? "text-xs" : "text-sm sm:text-base"}`}>
-        Nothing is stored — your photos exist only on your two devices, and only if you download them.
+        Nothing is stored - your photos exist only on your two devices, and only if you download them.
       </p>
     </div>
   );
