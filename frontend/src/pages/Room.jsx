@@ -31,6 +31,7 @@ export default function Room() {
   const [waitingForPartnerShot, setWaitingForPartnerShot] = useState(false);
   const [resultImage, setResultImage] = useState(null);
   const [filterName, setFilterName] = useState("warm");
+  const [frameName, setFrameName] = useState("classic");
   const [applyingFilter, setApplyingFilter] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [flash, setFlash] = useState(false);
@@ -42,6 +43,7 @@ export default function Room() {
 
   const videoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const remoteStreamRef = useRef(null);
   const canvasRef = useRef(document.createElement("canvas"));
   const streamRef = useRef(null);
   const wsRef = useRef(null);
@@ -94,15 +96,61 @@ export default function Room() {
     };
   }, []);
 
-  // The <video> element only mounts once CameraStage renders (phase
-  // "waiting_partner" onward), which happens after getUserMedia already
-  // resolved. Re-attach the already-acquired stream whenever the video
-  // element becomes available so the self-preview and capture aren't blank.
+  // The <video> elements unmount whenever CameraStage leaves the tree (e.g.
+  // during the result phase) and remount as fresh DOM nodes afterwards, so
+  // BOTH streams must be re-attached on every phase change or one half of
+  // the stage comes back black after a retake. iOS Safari additionally needs
+  // an explicit play() after srcObject is reassigned.
   useEffect(() => {
     if (videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play?.().catch(() => {});
+    }
+    if (remoteVideoRef.current && remoteStreamRef.current) {
+      remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      remoteVideoRef.current.play?.().catch(() => {});
     }
   }, [phase]);
+
+  // iOS suspends the page when the app is backgrounded: the WebSocket closes
+  // and the camera track is often killed outright. On return to foreground,
+  // reconnect immediately (instead of waiting out the backoff timer) and
+  // re-acquire the camera if its track ended, swapping the new track into
+  // the live peer connection.
+  useEffect(() => {
+    const revive = async () => {
+      if (document.visibilityState !== "visible" || !role) return;
+      const track = streamRef.current?.getVideoTracks?.()[0];
+      if (track && track.readyState === "ended") {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+          streamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play?.().catch(() => {});
+          }
+          const newTrack = stream.getVideoTracks()[0];
+          const sender = pcRef.current?.getSenders?.().find((s) => s.track?.kind === "video");
+          if (sender) await sender.replaceTrack(newTrack);
+        } catch {
+          // Camera unavailable; the permission flow will surface this.
+        }
+      }
+      const ws = wsRef.current;
+      const wsDown = !ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING;
+      if (wsDown && !manualCloseRef.current && !terminalErrorRef.current) {
+        reconnectAttemptsRef.current = 0;
+        clearTimeout(reconnectTimeoutRef.current);
+        connectWebSocketRef.current?.(role);
+      }
+    };
+    document.addEventListener("visibilitychange", revive);
+    window.addEventListener("pageshow", revive);
+    return () => {
+      document.removeEventListener("visibilitychange", revive);
+      window.removeEventListener("pageshow", revive);
+    };
+  }, [role]);
 
   const runLocalCountdown = useCallback((duration) => {
     clearInterval(countdownIntervalRef.current);
@@ -128,10 +176,15 @@ export default function Room() {
     canvas.width = Math.round(srcW * scale);
     canvas.height = Math.round(srcH * scale);
     const ctx = canvas.getContext("2d");
-    // Capture unmirrored: the on-screen preview is flipped (selfie
-    // convention), but the photo itself must read true so signs and text
-    // aren't reversed on the partner's side of the strip.
+    // Capture mirrored, matching the on-screen preview exactly (WYSIWYG).
+    // Both the self-preview and the partner's live video are displayed
+    // mirrored, so capturing mirrored means the final strip is identical to
+    // what both people saw while posing -- hearts and paired poses line up.
+    // Trade-off: hand-written signs read reversed, as in any mirror.
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
     setFlash(true);
@@ -152,6 +205,7 @@ export default function Room() {
     makingOfferRef.current = false;
     ignoreOfferRef.current = false;
     pendingCandidatesRef.current = [];
+    remoteStreamRef.current = null;
     setPartnerVideoLive(false);
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
   }, []);
@@ -164,7 +218,11 @@ export default function Room() {
       }
     };
     pc.ontrack = (e) => {
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
+      remoteStreamRef.current = e.streams[0];
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = e.streams[0];
+        remoteVideoRef.current.play?.().catch(() => {});
+      }
       setPartnerVideoLive(true);
     };
     pc.onconnectionstatechange = () => {
@@ -288,6 +346,8 @@ export default function Room() {
           setPartnerCameraReady(data.partner_camera_ready);
           setCountdownDuration(data.countdown_duration);
           if (data.total_rounds) setTotalRounds(data.total_rounds);
+          if (data.filter) setFilterName(data.filter);
+          if (data.frame) setFrameName(data.frame);
           ws.send(JSON.stringify({ type: "camera_ready" }));
           break;
         case "partner_joined":
@@ -335,6 +395,7 @@ export default function Room() {
         case "strip_ready":
           setResultImage(data.image);
           if (data.filter) setFilterName(data.filter);
+          if (data.frame) setFrameName(data.frame);
           setApplyingFilter(false);
           setPhase("result");
           break;
@@ -342,7 +403,14 @@ export default function Room() {
           setResultImage(null);
           setRound(1);
           setWaitingForPartnerShot(false);
-          setPhase("both_ready");
+          // The server also broadcasts this as a mid-round resync when a
+          // partner rejoins; don't yank a client that hasn't enabled its
+          // camera yet out of the permission/join flow.
+          setPhase((p) =>
+            ["both_ready", "countdown", "captured_wait", "processing", "result"].includes(p)
+              ? "both_ready"
+              : p
+          );
           break;
         case "partner_disconnected":
           setPartnerConnected(false);
@@ -461,6 +529,14 @@ export default function Room() {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       setApplyingFilter(true);
       wsRef.current.send(JSON.stringify({ type: "set_filter", filter: f }));
+    }
+  };
+
+  const handleSetFrame = (f) => {
+    if (f === frameName || applyingFilter) return;
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      setApplyingFilter(true);
+      wsRef.current.send(JSON.stringify({ type: "set_frame", frame: f }));
     }
   };
 
@@ -651,6 +727,8 @@ export default function Room() {
             onRetake={handleRetake}
             filterName={filterName}
             onChangeFilter={handleSetFilter}
+            frameName={frameName}
+            onChangeFrame={handleSetFrame}
             applyingFilter={applyingFilter}
           />
         )}

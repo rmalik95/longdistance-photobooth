@@ -11,7 +11,23 @@ const FILTERS = [
   { id: "cool", label: "Cool" },
 ];
 
-export default function ResultPanel({ image, onDownload, onRetake, filterName, onChangeFilter, applyingFilter }) {
+const FRAMES = [
+  { id: "classic", label: "Classic" },
+  { id: "minimal", label: "Minimal" },
+  { id: "film", label: "Film" },
+  { id: "polaroid", label: "Polaroid" },
+];
+
+export default function ResultPanel({
+  image,
+  onDownload,
+  onRetake,
+  filterName,
+  onChangeFilter,
+  frameName,
+  onChangeFrame,
+  applyingFilter,
+}) {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   return (
@@ -44,6 +60,24 @@ export default function ResultPanel({ image, onDownload, onRetake, filterName, o
         </div>
       </div>
 
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-sm font-medium text-warmgray">Frame</span>
+        <div className="flex flex-wrap justify-center gap-2">
+          {FRAMES.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onChangeFrame(opt.id)}
+              disabled={applyingFilter}
+              data-testid={`frame-option-${opt.id}`}
+              className={`${chip(frameName === opt.id)} disabled:opacity-60`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex flex-wrap items-center justify-center gap-4">
         <button
           type="button"
@@ -67,7 +101,7 @@ export default function ResultPanel({ image, onDownload, onRetake, filterName, o
           data-testid="retake-btn"
           className={btnSecondary}
         >
-          <RotateCcw size={18} /> Retake
+          <RotateCcw size={18} /> Take another
         </button>
       </div>
 

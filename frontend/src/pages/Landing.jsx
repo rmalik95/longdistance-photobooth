@@ -17,13 +17,6 @@ const LAYOUTS = [
   { id: "2x2", label: "2×2", frames: 4, cols: 2 },
   { id: "1x2", label: "1×2", frames: 2, cols: 1 },
 ];
-const FRAMES = [
-  { id: "classic", label: "Classic" },
-  { id: "minimal", label: "Minimal" },
-  { id: "film", label: "Film" },
-  { id: "polaroid", label: "Polaroid" },
-];
-
 const HOW_IT_WORKS = [
   {
     icon: Link2,
@@ -53,7 +46,6 @@ export default function Landing() {
   const navigate = useNavigate();
   const [duration, setDuration] = useState(3);
   const [layout, setLayout] = useState("1x4");
-  const [frame, setFrame] = useState("classic");
   const [joinCode, setJoinCode] = useState("");
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
@@ -62,7 +54,8 @@ export default function Landing() {
   const handleStartSession = async () => {
     setCreating(true);
     try {
-      const { code } = await createSession({ countdownDuration: duration, layout, frame });
+      // Frame is chosen on the result page now; sessions start with the default.
+      const { code } = await createSession({ countdownDuration: duration, layout, frame: "classic" });
       localStorage.setItem(`pb_role_${code}`, "host");
       navigate(`/room/${code}`);
     } catch (err) {
@@ -167,22 +160,6 @@ export default function Landing() {
                               <span key={i} className={`block w-4 h-[5px] rounded-[1px] ${layout === opt.id ? "bg-cream" : "bg-ink/60"}`} />
                             ))}
                           </span>
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-warmgray">Frame</span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {FRAMES.map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setFrame(opt.id)}
-                          data-testid={`frame-option-${opt.id}`}
-                          className={chipTight(frame === opt.id)}
-                        >
                           {opt.label}
                         </button>
                       ))}

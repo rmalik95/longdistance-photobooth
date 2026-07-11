@@ -122,11 +122,30 @@ async def start_round_countdown(session: Session):
     asyncio.create_task(schedule_capture(session, session.round, session.countdown_duration))
 
 
+CAPTURE_TIMEOUT_SECONDS = 12
+
+
 async def schedule_capture(session: Session, expected_round: int, duration: float):
     await asyncio.sleep(duration)
     if session.round == expected_round and session.state == "countdown":
         session.state = "awaiting_capture"
         await broadcast(session, {"type": "capture_now", "round": expected_round})
+        asyncio.create_task(capture_watchdog(session, expected_round))
+
+
+async def capture_watchdog(session: Session, expected_round: int):
+    """Unstick a round when one side never delivers its photo (e.g. the tab
+    was backgrounded right as capture_now fired). Instead of both clients
+    waiting forever, clear the partial captures and rerun the same round."""
+    await asyncio.sleep(CAPTURE_TIMEOUT_SECONDS)
+    if (
+        session.round == expected_round
+        and session.state == "awaiting_capture"
+        and len(session.captures.get(expected_round, {})) < 2
+        and session.both_connected()
+    ):
+        session.captures[expected_round] = {}
+        await start_round_countdown(session)
 
 
 async def render_strip(session: Session) -> str:
@@ -151,7 +170,10 @@ async def finalize_strip(session: Session):
         return
 
     session.state = "result"
-    await broadcast(session, {"type": "strip_ready", "image": data_url, "filter": session.filter_name})
+    await broadcast(
+        session,
+        {"type": "strip_ready", "image": data_url, "filter": session.filter_name, "frame": session.frame},
+    )
     # Captures stay in memory (never on disk) while the result is shown so a
     # different filter can be applied to them; they are purged on retake,
     # reconnect reset, or session removal.
@@ -211,7 +233,26 @@ async def handle_message(session: Session, role: str, data: dict):
             logger.error("Failed to re-render photo strip: %s", exc)
             await send_to(session, role, {"type": "error", "message": "Could not apply that filter. Please retake."})
             return
-        await broadcast(session, {"type": "strip_ready", "image": data_url, "filter": session.filter_name})
+        await broadcast(
+            session,
+            {"type": "strip_ready", "image": data_url, "filter": session.filter_name, "frame": session.frame},
+        )
+
+    elif msg_type == "set_frame":
+        new_frame = data.get("frame")
+        if session.state != "result" or new_frame not in VALID_FRAMES or new_frame == session.frame:
+            return
+        session.frame = new_frame
+        try:
+            data_url = await render_strip(session)
+        except Exception as exc:
+            logger.error("Failed to re-render photo strip: %s", exc)
+            await send_to(session, role, {"type": "error", "message": "Could not apply that frame. Please retake."})
+            return
+        await broadcast(
+            session,
+            {"type": "strip_ready", "image": data_url, "filter": session.filter_name, "frame": session.frame},
+        )
 
     elif msg_type in ("webrtc_offer", "webrtc_answer", "webrtc_ice_candidate"):
         # Pure signaling relay for the live peer-to-peer video preview --
@@ -257,6 +298,10 @@ async def websocket_endpoint(websocket: WebSocket, code: str, role: str = Query(
         return
 
     was_abandoned = session.state == "abandoned"
+    # A rejoin mid-round means someone missed messages while disconnected
+    # (backgrounded phone, dropped network). The round choreography can't
+    # resume from a stale session.round, so restart the sequence cleanly.
+    needs_reset = session.state in ("abandoned", "countdown", "awaiting_capture", "processing")
     existing = session.participants.get(role, {})
     session.participants[role] = {
         "ws": websocket,
@@ -285,12 +330,13 @@ async def websocket_endpoint(websocket: WebSocket, code: str, role: str = Query(
         }
     )
 
+    if needs_reset:
+        session.reset_for_retake()
+
     if other_connected:
         await send_to(session, other, {"type": "partner_reconnected" if was_abandoned else "partner_joined"})
-        if was_abandoned:
-            # A fresh reconnect after abandonment should not resume mid-round
-            # with stale captures -- restart the round sequence cleanly.
-            session.reset_for_retake()
+        if needs_reset:
+            await broadcast(session, {"type": "retake_started"})
             if session.state == "both_ready":
                 await broadcast(session, {"type": "both_ready"})
 

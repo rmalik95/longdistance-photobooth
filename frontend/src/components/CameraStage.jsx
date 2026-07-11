@@ -22,11 +22,11 @@ export default function CameraStage({
 
   return (
     <div
-      className="relative flex flex-col sm:flex-row w-full h-[52vh] sm:h-[70vh] rounded-2xl bg-ink shadow-soft-lg overflow-hidden"
+      className="relative flex flex-row w-full h-[40vh] sm:h-[70vh] rounded-2xl bg-ink shadow-soft-lg overflow-hidden"
       data-testid="camera-stage"
     >
       <div
-        className="relative flex-1 border-b sm:border-b-0 sm:border-r border-ink/20 overflow-hidden"
+        className="relative flex-1 border-r border-ink/20 overflow-hidden"
         data-testid="camera-video-container"
       >
         <video
@@ -51,6 +51,7 @@ export default function CameraStage({
           playsInline
           muted
           className={`w-full h-full object-cover ${showPartnerVideo ? "block" : "hidden"}`}
+          style={{ transform: "scaleX(-1)" }}
           data-testid="partner-video"
         />
         {showPartnerVideo && (

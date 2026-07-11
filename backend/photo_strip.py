@@ -156,15 +156,11 @@ def generate_strip(host_photos: list, guest_photos: list, layout: str = "1x3",
     if frame == "classic":
         draw.rectangle([0, 0, width - 1, height - 1], outline=INK, width=BORDER_W + 1)
 
-    footer_y = height - FOOTER_H - (26 if frame == "polaroid" else 0) + 16
+    footer_y = height - FOOTER_H - (26 if frame == "polaroid" else 0) + 24
     title_font = _load_font(30)
-    sub_font = _load_font(16)
     title = "together, apart"
-    sub = "captured live \u2022 nothing saved"
     tw = draw.textlength(title, font=title_font)
-    sw = draw.textlength(sub, font=sub_font)
     draw.text(((width - tw) / 2, footer_y), title, fill=style["text"], font=title_font)
-    draw.text(((width - sw) / 2, footer_y + 42), sub, fill=style["sub"], font=sub_font)
 
     buf = BytesIO()
     canvas.save(buf, format="JPEG", quality=92)
