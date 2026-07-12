@@ -176,15 +176,10 @@ export default function Room() {
     canvas.width = Math.round(srcW * scale);
     canvas.height = Math.round(srcH * scale);
     const ctx = canvas.getContext("2d");
-    // Capture mirrored, matching the on-screen preview exactly (WYSIWYG).
-    // Both the self-preview and the partner's live video are displayed
-    // mirrored, so capturing mirrored means the final strip is identical to
-    // what both people saw while posing -- hearts and paired poses line up.
-    // Trade-off: hand-written signs read reversed, as in any mirror.
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    // Send the raw (unmirrored) camera frame. Whether a photo needs flipping
+    // depends on which side of the strip that person lands on, which only the
+    // server knows, so orientation is decided there -- see _duo_frame.
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
     setFlash(true);

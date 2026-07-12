@@ -101,7 +101,13 @@ FRAME_STYLES = {
 
 
 def _duo_frame(host_url: str, guest_url: str, filter_fn) -> Image.Image:
-    host = _cover_fit(filter_fn(_decode(host_url)), PHOTO_W, PHOTO_H)
+    # Clients send raw camera frames. On screen each person sees themselves on
+    # the left and their partner on the right, so both gesture toward their own
+    # right, which lands on the same side in both raw frames. The host occupies
+    # the left half of the strip, so their frame is mirrored to turn them inward;
+    # the guest is already facing inward on the right half. Without this the two
+    # of them point the same way instead of at each other.
+    host = ImageOps.mirror(_cover_fit(filter_fn(_decode(host_url)), PHOTO_W, PHOTO_H))
     guest = _cover_fit(filter_fn(_decode(guest_url)), PHOTO_W, PHOTO_H)
     frame = Image.new("RGB", (PHOTO_W * 2 + DIVIDER_W, PHOTO_H), INK)
     frame.paste(host, (0, 0))
