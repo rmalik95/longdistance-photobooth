@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, RotateCcw, Eye, Loader2 } from "lucide-react";
+import { Download, RotateCcw, Eye, Loader2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { btnPrimary, btnSecondary, chip } from "@/lib/ui";
 
@@ -106,10 +106,18 @@ export default function ResultPanel({
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-lg bg-cream rounded-2xl border border-ink/10" data-testid="preview-dialog">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-cream rounded-2xl border border-ink/10" data-testid="preview-dialog">
           <DialogTitle className="font-heading font-bold text-ink">Your photo strip</DialogTitle>
           <DialogDescription className="sr-only">Preview of your combined photo strip, ready to download.</DialogDescription>
-          <img src={image} alt="Preview" className="w-full h-auto rounded-lg" />
+          <img src={image} alt="Preview" className="w-auto max-w-full max-h-[65vh] mx-auto rounded-lg" />
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(false)}
+            data-testid="preview-close-btn"
+            className={`${btnSecondary} mx-auto`}
+          >
+            <X size={18} /> Close
+          </button>
         </DialogContent>
       </Dialog>
     </div>

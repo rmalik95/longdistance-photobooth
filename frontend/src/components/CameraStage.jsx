@@ -51,7 +51,6 @@ export default function CameraStage({
           playsInline
           muted
           className={`w-full h-full object-cover ${showPartnerVideo ? "block" : "hidden"}`}
-          style={{ transform: "scaleX(-1)" }}
           data-testid="partner-video"
         />
         {showPartnerVideo && (
