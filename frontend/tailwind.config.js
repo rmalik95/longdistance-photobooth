@@ -18,19 +18,19 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)'
       },
       boxShadow: {
-        soft: '0 2px 8px rgba(26,26,25,0.06), 0 8px 24px rgba(26,26,25,0.08)',
-        'soft-lg': '0 4px 12px rgba(26,26,25,0.08), 0 16px 40px rgba(26,26,25,0.12)',
+        soft: '0 2px 8px rgba(74,29,63,0.06), 0 8px 24px rgba(74,29,63,0.08)',
+        'soft-lg': '0 4px 12px rgba(74,29,63,0.08), 0 16px 40px rgba(74,29,63,0.12)',
       },
       colors: {
-        cream: '#FDFBF7',
-        ink: '#1A1A19',
-        coral: {
-          DEFAULT: '#E07A5F',
-          dark: '#C96449',
+        blush: '#FFF9FB',
+        plum: '#4A1D3F',
+        rose: {
+          DEFAULT: '#E64980',
+          dark: '#C2255C',
         },
-        gold: '#F2CC8F',
-        sage: '#81B29A',
-        warmgray: '#4A4A48',
+        sun: '#FFD43B',
+        success: '#37B24C',
+        plumgray: '#5C4A55',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
