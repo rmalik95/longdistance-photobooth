@@ -80,31 +80,53 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-cream px-6 sm:px-12 py-10 sm:py-14">
-      <div className="max-w-6xl mx-auto">
-        <p className="font-heading font-black text-xl text-ink">
-          together<span className="font-accent italic font-medium text-coral">, apart</span>
-        </p>
-      </div>
+    <div className="min-h-screen bg-blush px-6 sm:px-12 pb-10 sm:pb-14">
+      <header className="sticky top-0 z-50 -mx-6 sm:-mx-12 px-6 sm:px-12 py-3 bg-blush/90 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+          <p className="font-heading font-black text-xl text-plum">
+            together<span className="font-accent italic font-medium text-rose">, apart</span>
+          </p>
+          <div className="flex items-center gap-3 sm:gap-5">
+            <span className="hidden sm:inline-flex items-center rounded-full bg-rose/10 text-rose text-xs font-bold px-3 py-1 uppercase tracking-wide">
+              100% free
+            </span>
+            <a
+              href="#how-it-works"
+              className="hidden md:block text-sm font-medium text-plumgray hover:text-plum transition-colors"
+            >
+              How it works
+            </a>
+            <button
+              type="button"
+              onClick={handleStartSession}
+              disabled={creating}
+              data-testid="nav-start-session-btn"
+              className="rounded-full bg-rose text-blush font-heading font-bold text-sm px-5 py-2 shadow-soft hover:bg-rose-dark transition-all disabled:opacity-60"
+            >
+              Start a booth
+            </button>
+          </div>
+        </div>
+      </header>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-14 items-center mt-10 sm:mt-16">
         <div className="lg:col-span-3 flex flex-col gap-8">
-          <span className="inline-flex items-center gap-2 self-start text-xs font-medium text-ink rounded-full bg-gold/40 px-4 py-1.5">
-            <Heart size={14} strokeWidth={2.5} className="text-coral" /> for couples, friends &amp; family, apart
+          <span className="inline-flex items-center gap-2 self-start text-xs font-medium text-plum rounded-full bg-rose/10 px-4 py-1.5">
+            <Heart size={14} strokeWidth={2.5} className="text-rose" /> for couples, friends &amp; family, apart
           </span>
 
-          <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none font-black text-ink">
-            Take a photo, <span className="font-accent italic font-medium text-coral">together</span>.
+          <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none font-black text-plum">
+            Take a photo, <span className="font-accent italic font-medium text-rose">together</span>.
             <br />
             From wherever you are.
           </h1>
 
-          <p className="font-body text-base sm:text-lg text-warmgray max-w-xl">
+          <p className="font-body text-base sm:text-lg text-plumgray max-w-xl">
             Start a session, send the link to whoever you want in the shot, and count down together
             to the same moment, captured live and merged into one photo strip.
           </p>
 
-          <p className="font-body text-sm text-warmgray/80 max-w-xl">
+          <p className="font-body text-sm text-plumgray/80 max-w-xl">
             Built for long-distance couples, friends, and family in different time zones or on the
             other side of the world. Really, all you need is two people with two phones.
           </p>
@@ -123,18 +145,18 @@ export default function Landing() {
                 {creating ? <Loader2 className="animate-spin" size={20} /> : <Camera size={20} />}
                 {creating ? "Creating…" : "Start a session"}
               </button>
-              <p className="text-xs text-warmgray/80 text-center font-body">
-                Free, no sign-up. You'll get a link to send.
+              <p className="text-xs text-plumgray/80 text-center font-body">
+                ✓ Free forever&nbsp;&nbsp;✓ No signup&nbsp;&nbsp;✓ No watermark
               </p>
 
               <Collapsible open={customizeOpen} onOpenChange={setCustomizeOpen}>
-                <CollapsibleTrigger className="flex items-center justify-center gap-1.5 w-full text-sm font-medium text-warmgray hover:text-ink transition-colors">
+                <CollapsibleTrigger className="flex items-center justify-center gap-1.5 w-full text-sm font-medium text-plumgray hover:text-plum transition-colors">
                   Customize your strip
                   <ChevronDown size={16} className={`transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="flex flex-col gap-4 pt-4">
                   <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-warmgray">Countdown</span>
+                    <span className="text-sm font-medium text-plumgray">Countdown</span>
                     <div className="flex gap-2">
                       <button type="button" onClick={() => setDuration(3)} data-testid="countdown-3-option" className={`flex-1 ${chip(duration === 3)}`}>
                         3 sec
@@ -145,7 +167,7 @@ export default function Landing() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-warmgray">Strip</span>
+                    <span className="text-sm font-medium text-plumgray">Strip</span>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {LAYOUTS.map((opt) => (
                         <button
@@ -157,7 +179,7 @@ export default function Landing() {
                         >
                           <span className={`grid gap-[2px] ${opt.cols === 2 ? "grid-cols-2" : "grid-cols-1"}`} aria-hidden>
                             {Array.from({ length: opt.frames }).map((_, i) => (
-                              <span key={i} className={`block w-4 h-[5px] rounded-[1px] ${layout === opt.id ? "bg-cream" : "bg-ink/60"}`} />
+                              <span key={i} className={`block w-4 h-[5px] rounded-[1px] ${layout === opt.id ? "bg-blush" : "bg-plum/60"}`} />
                             ))}
                           </span>
                           {opt.label}
@@ -170,7 +192,7 @@ export default function Landing() {
             </div>
 
             <div className={`${card} p-6 sm:p-8 flex flex-col gap-4`} data-testid="join-session-card">
-              <h3 className="font-heading text-xl font-semibold text-ink">Have a code?</h3>
+              <h3 className="font-heading text-xl font-semibold text-plum">Have a code?</h3>
               <form onSubmit={handleJoinSession} className="flex flex-col gap-3 flex-1">
                 <input
                   type="text"
@@ -178,9 +200,9 @@ export default function Landing() {
                   onChange={(e) => setJoinCode(e.target.value)}
                   placeholder="e.g. K7X2M"
                   data-testid="join-code-input"
-                  className="bg-cream/60 border border-ink/10 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent placeholder:font-normal placeholder:text-warmgray/50 tracking-widest uppercase"
+                  className="bg-blush/60 border border-plum/10 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-rose focus:border-transparent placeholder:font-normal placeholder:text-plumgray/50 tracking-widest uppercase"
                 />
-                <p className="text-xs text-warmgray/80 font-body">You can paste the whole link too.</p>
+                <p className="text-xs text-plumgray/80 font-body">You can paste the whole link too.</p>
                 <button type="submit" disabled={joining} data-testid="join-session-btn" className={`${btnSecondary} mt-auto`}>
                   {joining ? <Loader2 className="animate-spin" size={18} /> : <ArrowRight size={18} />}
                   {joining ? "Joining…" : "Join session"}
@@ -191,31 +213,53 @@ export default function Landing() {
         </div>
 
         <div className="lg:col-span-2 flex justify-center">
-          <div className="relative h-[420px] sm:h-[500px] w-[300px] sm:w-[360px] pointer-events-none select-none">
-            <SampleStrip src={cameraToss} rotate={4} caption="" className="absolute right-0 top-14" />
-            <SampleStrip src={sunsetJump} rotate={-6} caption="date night!" className="absolute left-0 top-0" />
-            <SampleStrip src={balloonsWalk} rotate={3} caption="miss you!" className="absolute left-8 sm:left-16 bottom-0" />
+          <div className="relative h-[420px] sm:h-[500px] w-[300px] sm:w-[360px] select-none">
+            <div
+              className="absolute -top-6 -left-6 sm:-left-10 z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-sun shadow-soft-lg rotate-[-8deg] flex flex-col items-center justify-center text-plum"
+              data-testid="free-sticker"
+            >
+              <span className="font-heading font-black text-4xl sm:text-5xl leading-none">$0</span>
+              <span className="font-heading font-bold text-[10px] sm:text-xs tracking-widest uppercase mt-1">Free forever</span>
+            </div>
+            <div className="pointer-events-none">
+              <SampleStrip src={cameraToss} rotate={4} caption="" className="absolute right-0 top-14" />
+              <SampleStrip src={sunsetJump} rotate={-6} caption="date night!" className="absolute left-0 top-0" />
+              <SampleStrip src={balloonsWalk} rotate={3} caption="miss you!" className="absolute left-8 sm:left-16 bottom-0" />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto mt-20 sm:mt-28">
-        <h2 className="font-heading text-2xl sm:text-3xl font-black text-ink text-center">
-          How it <span className="font-accent italic font-medium text-coral">works</span>
+      <div id="how-it-works" className="max-w-6xl mx-auto mt-20 sm:mt-28 scroll-mt-20">
+        <h2 className="font-heading text-2xl sm:text-3xl font-black text-plum text-center">
+          How it <span className="font-accent italic font-medium text-rose">works</span>
         </h2>
         <div className="grid sm:grid-cols-3 gap-6 mt-8">
           {HOW_IT_WORKS.map((step, i) => (
             <div key={step.title} className={`${card} p-6 flex flex-col gap-3 items-center text-center`}>
-              <span className="font-accent italic text-coral text-3xl leading-none">{i + 1}</span>
-              <step.icon size={22} className="text-warmgray" strokeWidth={2} />
-              <h3 className="font-heading font-bold text-ink">{step.title}</h3>
-              <p className="font-body text-sm text-warmgray">{step.body}</p>
+              <span className="font-accent italic text-rose text-3xl leading-none">{i + 1}</span>
+              <step.icon size={22} className="text-plumgray" strokeWidth={2} />
+              <h3 className="font-heading font-bold text-plum">{step.title}</h3>
+              <p className="font-body text-sm text-plumgray">{step.body}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <p className="text-center text-xs text-warmgray mt-16 font-body">
+      <div className="max-w-6xl mx-auto mt-16 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={handleStartSession}
+          disabled={creating}
+          data-testid="footer-start-session-btn"
+          className={`${btnPrimary} text-lg`}
+        >
+          {creating ? <Loader2 className="animate-spin" size={20} /> : <Camera size={20} />}
+          {creating ? "Creating…" : "Start a booth, it's $0"}
+        </button>
+      </div>
+
+      <p className="text-center text-xs text-plumgray mt-10 font-body">
         Works on Chrome &amp; Safari, laptop or phone. Agree on a time with the other person, then jump in.
       </p>
     </div>
