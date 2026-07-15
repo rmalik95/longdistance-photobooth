@@ -215,7 +215,7 @@ export default function Landing() {
         <div className="lg:col-span-2 flex justify-center">
           <div className="relative h-[420px] sm:h-[500px] w-[300px] sm:w-[360px] select-none">
             <div
-              className="absolute -top-6 -left-6 sm:-left-10 z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-sun shadow-soft-lg rotate-[-8deg] flex flex-col items-center justify-center text-plum"
+              className="absolute -top-8 -right-2 sm:-right-6 z-10 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-sun shadow-soft-lg rotate-[8deg] flex flex-col items-center justify-center text-plum"
               data-testid="free-sticker"
             >
               <span className="font-heading font-black text-4xl sm:text-5xl leading-none">$0</span>
