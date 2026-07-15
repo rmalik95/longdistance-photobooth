@@ -14,7 +14,7 @@ export default function SampleStrip({ src, rotate = 0, caption = "", className =
       <div className="overflow-hidden rounded-[3px] aspect-[4/5]">
         <img src={src} alt="" loading="lazy" className="w-full h-full object-cover" />
       </div>
-      {caption && <p className="font-accent italic text-center text-sm mt-2 text-ink">{caption}</p>}
+      {caption && <p className="font-accent italic text-center text-sm mt-2 text-plum">{caption}</p>}
     </div>
   );
 }

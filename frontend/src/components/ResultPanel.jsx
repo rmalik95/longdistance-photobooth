@@ -41,7 +41,7 @@ export default function ResultPanel({
       />
 
       <div className="flex flex-col items-center gap-2">
-        <span className="text-sm font-medium text-warmgray flex items-center gap-2">
+        <span className="text-sm font-medium text-plumgray flex items-center gap-2">
           Filter {applyingFilter && <Loader2 className="animate-spin" size={12} />}
         </span>
         <div className="flex flex-wrap justify-center gap-2">
@@ -61,7 +61,7 @@ export default function ResultPanel({
       </div>
 
       <div className="flex flex-col items-center gap-2">
-        <span className="text-sm font-medium text-warmgray">Frame</span>
+        <span className="text-sm font-medium text-plumgray">Frame</span>
         <div className="flex flex-wrap justify-center gap-2">
           {FRAMES.map((opt) => (
             <button
@@ -106,8 +106,8 @@ export default function ResultPanel({
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-cream rounded-2xl border border-ink/10" data-testid="preview-dialog">
-          <DialogTitle className="font-heading font-bold text-ink">Your photo strip</DialogTitle>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-blush rounded-2xl border border-plum/10" data-testid="preview-dialog">
+          <DialogTitle className="font-heading font-bold text-plum">Your photo strip</DialogTitle>
           <DialogDescription className="sr-only">Preview of your combined photo strip, ready to download.</DialogDescription>
           <img src={image} alt="Preview" className="w-auto max-w-full max-h-[65vh] mx-auto rounded-lg" />
           <button
