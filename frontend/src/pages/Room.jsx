@@ -8,7 +8,7 @@ import CameraStage from "@/components/CameraStage";
 import ResultPanel from "@/components/ResultPanel";
 import { fetchSessionStatus } from "@/lib/api";
 import { buildWsUrl } from "@/lib/wsUrl";
-import { btnPrimary } from "@/lib/ui";
+import { btnPrimary, card } from "@/lib/ui";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 const MAX_CAPTURE_WIDTH = 640;
@@ -550,32 +550,32 @@ export default function Room() {
   );
 
   return (
-    <div className="min-h-screen bg-blush px-4 sm:px-10 py-8 sm:py-12">
+    <div className="min-h-screen bg-paper text-ink font-body px-4 sm:px-10 py-8 sm:py-12">
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <button
             type="button"
             onClick={() => navigate("/")}
             data-testid="back-home-btn"
-            className="flex items-center gap-1.5 text-sm font-heading font-black text-plum hover:text-rose transition-colors"
+            className="flex items-center gap-1.5 font-display text-lg text-ink hover:text-signal transition-colors cursor-pointer"
           >
-            <Home size={16} /> together<span className="font-accent italic font-medium text-rose">, apart</span>
+            <Home size={16} /> together<span className="text-signal">, apart</span>
           </button>
           {(role || phase === "join_prompt") && phase !== "not_found" && <SessionCodeBadge code={code} />}
         </div>
 
         {phase === "checking" && (
           <div className="flex flex-col items-center gap-3 py-24" data-testid="checking-state">
-            <Loader2 className="animate-spin text-rose" size={32} />
-            <p className="font-body text-plumgray">Looking for your session…</p>
+            <Loader2 className="animate-spin text-signal" size={32} />
+            <p className="font-body text-inksoft">Looking for your session…</p>
           </div>
         )}
 
         {phase === "not_found" && (
           <div className="flex flex-col items-center gap-4 py-24 text-center" data-testid="not-found-state">
-            <AlertTriangle className="text-rose" size={36} />
-            <h2 className="font-heading text-2xl font-bold text-plum">We couldn't find that session</h2>
-            <p className="font-body text-plumgray max-w-sm">
+            <AlertTriangle className="text-signal" size={36} />
+            <h2 className="font-display text-2xl sm:text-3xl text-ink">We couldn't find that session</h2>
+            <p className="font-body text-inksoft max-w-sm">
               This link may have expired, or the code might have a typo. Sessions close themselves once you're both done,
               so starting a fresh one takes a few seconds.
             </p>
@@ -587,11 +587,11 @@ export default function Room() {
 
         {phase === "join_prompt" && (
           <div className="flex flex-col items-center gap-5 py-20 text-center" data-testid="join-prompt-state">
-            <Camera className="text-rose" size={40} />
-            <h2 className="font-heading text-2xl sm:text-3xl font-bold text-plum">
-              You've been invited to a photobooth <span className="font-accent italic text-rose">moment</span>
+            <Camera className="text-signal" size={40} />
+            <h2 className="font-display text-2xl sm:text-3xl text-ink">
+              You've been invited to a photobooth <span className="font-display text-signal">moment</span>
             </h2>
-            <p className="font-body text-plumgray max-w-sm">
+            <p className="font-body text-inksoft max-w-sm">
               Someone saved you a spot in session <strong>{code}</strong>. Turn on your camera when you're ready.
             </p>
             <PrivacyBanner compact />
@@ -610,9 +610,9 @@ export default function Room() {
 
         {phase === "permission" && (
           <div className="flex flex-col items-center gap-5 py-20 text-center" data-testid="permission-state">
-            <Camera className="text-rose" size={40} />
-            <h2 className="font-heading text-2xl sm:text-3xl font-bold text-plum">Enable your camera</h2>
-            <p className="font-body text-plumgray max-w-sm">
+            <Camera className="text-signal" size={40} />
+            <h2 className="font-display text-2xl sm:text-3xl text-ink">Enable your camera</h2>
+            <p className="font-body text-inksoft max-w-sm">
               Your camera fills your half of the strip. Nothing is saved or sent anywhere until the countdown finishes a shot.
             </p>
             <PrivacyBanner compact />
@@ -631,9 +631,9 @@ export default function Room() {
 
         {phase === "error" && (
           <div className="flex flex-col items-center gap-4 py-24 text-center" data-testid="error-state">
-            <AlertTriangle className="text-rose" size={36} />
-            <h2 className="font-heading text-2xl font-bold text-plum">Hmm, that didn't work</h2>
-            <p className="font-body text-plumgray max-w-sm" data-testid="error-message">
+            <AlertTriangle className="text-signal" size={36} />
+            <h2 className="font-display text-2xl sm:text-3xl text-ink">Hmm, that didn't work</h2>
+            <p className="font-body text-inksoft max-w-sm" data-testid="error-message">
               {errorMessage}
             </p>
             <button type="button" onClick={() => navigate("/")} className={btnPrimary} data-testid="error-home-btn">
@@ -665,28 +665,31 @@ export default function Room() {
             )}
 
             {phase === "processing" && (
-              <div className="flex items-center justify-center gap-2 text-plumgray" data-testid="processing-state">
+              <div
+                className="flex items-center justify-center gap-2 font-mono uppercase text-xs tracking-[0.15em] text-inksoft"
+                data-testid="processing-state"
+              >
                 <Loader2 className="animate-spin" size={18} /> Stitching your two sides together…
               </div>
             )}
 
             {phase === "abandoned" && (
               <div
-                className="flex flex-col items-center gap-3 text-center rounded-2xl bg-white shadow-soft border border-plum/5 p-6"
+                className={`${card} flex flex-col items-center gap-3 text-center p-6 rounded-2xl`}
                 data-testid="abandoned-state"
               >
                 {selfDisconnected && reconnecting && (
                   <>
-                    <Loader2 className="animate-spin text-rose" size={28} />
-                    <p className="font-body font-medium text-plum" data-testid="reconnecting-message">
+                    <Loader2 className="animate-spin text-signal" size={28} />
+                    <p className="font-body font-medium text-ink" data-testid="reconnecting-message">
                       Lost you for a second, reconnecting…
                     </p>
                   </>
                 )}
                 {selfDisconnected && reconnectFailed && (
                   <>
-                    <WifiOff className="text-rose" size={28} />
-                    <p className="font-body font-medium text-plum">
+                    <WifiOff className="text-signal" size={28} />
+                    <p className="font-body font-medium text-ink">
                       We tried a few times but couldn't get back in. Check your internet and give it another go.
                     </p>
                     <button
@@ -701,8 +704,8 @@ export default function Room() {
                 )}
                 {!selfDisconnected && (
                   <>
-                    <WifiOff className="text-rose" size={28} />
-                    <p className="font-body font-medium text-plum">
+                    <WifiOff className="text-signal" size={28} />
+                    <p className="font-body font-medium text-ink">
                       Looks like your partner's connection dropped. Sit tight, the moment they reopen the link, you'll
                       pick up right where you left off.
                     </p>

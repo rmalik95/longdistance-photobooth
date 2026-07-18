@@ -16,11 +16,11 @@ SESSION_TTL_SECONDS = 30 * 60          # purge any session idle this long
 ABANDON_GRACE_SECONDS = 90             # time allowed for a partner to reconnect
 ROUND_GAP_SECONDS = 1.6                # pause between rounds before next countdown
 
-LAYOUT_ROUNDS = {"1x4": 4, "1x3": 3, "2x2": 4, "1x2": 2}
+LAYOUT_ROUNDS = {"1x4": 4, "1x3": 3, "2x2": 4}
 DEFAULT_LAYOUT = "1x3"
 VALID_FRAMES = {"classic", "minimal", "film", "polaroid"}
 DEFAULT_FRAME = "classic"
-VALID_FILTERS = {"none", "warm", "bw", "vintage", "cool"}
+VALID_FILTERS = {"none", "warm", "bw", "vintage", "cool", "golden", "fade", "dramatic"}
 DEFAULT_FILTER = "warm"
 
 _CODE_CHARS = "".join(c for c in (string.ascii_uppercase + string.digits) if c not in "0O1I")

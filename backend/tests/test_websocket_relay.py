@@ -155,9 +155,9 @@ async def run_capture_flow(host, guest, rounds):
 class TestFilterAfterShots:
     def test_set_filter_regenerates_strip_for_both(self):
         async def run():
-            code = create_session_with_options(layout="1x2")
+            code = create_session_with_options(layout="1x3")
             host, guest = await join_and_reach_both_ready(code)
-            host_result, guest_result = await run_capture_flow(host, guest, rounds=2)
+            host_result, guest_result = await run_capture_flow(host, guest, rounds=3)
             assert host_result["image"].startswith("data:image/jpeg;base64,")
             assert host_result["filter"] == "warm"
 
@@ -175,9 +175,9 @@ class TestFilterAfterShots:
 
     def test_invalid_filter_is_ignored(self):
         async def run():
-            code = create_session_with_options(layout="1x2")
+            code = create_session_with_options(layout="1x3")
             host, guest = await join_and_reach_both_ready(code)
-            await run_capture_flow(host, guest, rounds=2)
+            await run_capture_flow(host, guest, rounds=3)
 
             await guest.send(json.dumps({"type": "set_filter", "filter": "xray"}))
             # prove the socket is still alive and no strip_ready was emitted for the bad filter

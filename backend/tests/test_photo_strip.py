@@ -18,9 +18,11 @@ def _photos(n):
     return [_photo("red")] * n, [_photo("blue")] * n
 
 
-@pytest.mark.parametrize("layout,rounds", [("1x4", 4), ("1x3", 3), ("2x2", 4), ("1x2", 2)])
+@pytest.mark.parametrize("layout,rounds", [("1x4", 4), ("1x3", 3), ("2x2", 4)])
 @pytest.mark.parametrize("frame", ["classic", "minimal", "film", "polaroid"])
-@pytest.mark.parametrize("filter_name", ["none", "warm", "bw", "vintage", "cool"])
+@pytest.mark.parametrize(
+    "filter_name", ["none", "warm", "bw", "vintage", "cool", "golden", "fade", "dramatic"]
+)
 def test_all_combinations_render(layout, rounds, frame, filter_name):
     host, guest = _photos(rounds)
     raw = generate_strip(host, guest, layout=layout, frame=frame, filter_name=filter_name)
@@ -44,8 +46,8 @@ def test_grid_is_roughly_square():
 
 
 def test_bw_filter_is_grayscale():
-    host, guest = _photos(2)
-    raw = generate_strip(host, guest, layout="1x2", filter_name="bw")
+    host, guest = _photos(3)
+    raw = generate_strip(host, guest, layout="1x3", filter_name="bw")
     img = Image.open(BytesIO(raw)).convert("RGB")
     px = img.getpixel((img.width // 4, img.height // 3))
     assert max(px) - min(px) < 12

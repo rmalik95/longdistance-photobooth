@@ -38,6 +38,16 @@ other side of the world. Really, all you need is two people with two phones.
 
 ## Getting started
 
+### Quick start (recommended)
+
+```bash
+./start.sh
+```
+
+Starts the backend on `http://localhost:8000` and the frontend on
+`http://localhost:3000` (creating the virtualenv / installing dependencies on
+first run). Ctrl+C stops both. To run the pieces manually instead:
+
 ### Prerequisites
 - Node.js 18+ and Yarn
 - Python 3.10+

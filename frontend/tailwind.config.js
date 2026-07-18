@@ -8,9 +8,10 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        heading: ['"Cabinet Grotesk"', 'sans-serif'],
-        body: ['"Satoshi"', 'sans-serif'],
-        accent: ['"Cormorant Garamond"', 'serif'],
+        display: ['"Calistoga"', 'serif'],
+        body: ['"Inter"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+        hand: ['"Caveat"', 'cursive'],
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -18,19 +19,20 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)'
       },
       boxShadow: {
-        soft: '0 2px 8px rgba(74,29,63,0.06), 0 8px 24px rgba(74,29,63,0.08)',
-        'soft-lg': '0 4px 12px rgba(74,29,63,0.08), 0 16px 40px rgba(74,29,63,0.12)',
+        photo: '0 2px 6px rgba(28,23,18,0.10), 0 18px 44px rgba(28,23,18,0.16)',
+        lift: '0 1px 2px rgba(28,23,18,0.08), 0 8px 24px rgba(28,23,18,0.10)',
       },
       colors: {
-        blush: '#FFF9FB',
-        plum: '#4A1D3F',
-        rose: {
-          DEFAULT: '#E64980',
-          dark: '#C2255C',
+        paper: '#F7F2E9',
+        paperdeep: '#EFE7D8',
+        ink: '#1C1712',
+        inksoft: '#6E6355',
+        signal: {
+          DEFAULT: '#E4572E',
+          dark: '#C43E1B',
         },
-        sun: '#FFD43B',
-        success: '#37B24C',
-        plumgray: '#5C4A55',
+        stamp: '#F2B33D',
+        sage: '#5B8C5A',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -89,6 +91,14 @@ module.exports = {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.5' },
         },
+        'spin-slow': {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
+        },
         'accordion-down': {
           from: {
             height: '0'
@@ -111,6 +121,8 @@ module.exports = {
         'strip-reveal': 'strip-reveal 0.6s cubic-bezier(0.16,1,0.3,1) forwards',
         'pop-in': 'pop-in 0.5s cubic-bezier(0.16,1,0.3,1)',
         'pulse-soft': 'pulse-soft 1.6s ease-in-out infinite',
+        'spin-slow': 'spin-slow 16s linear infinite',
+        marquee: 'marquee 30s linear infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out'
       }

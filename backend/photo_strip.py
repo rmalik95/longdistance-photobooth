@@ -90,7 +90,48 @@ def _f_cool(img):
     return ImageEnhance.Color(Image.merge("RGB", (r, g, b))).enhance(1.02)
 
 
-FILTERS = {"none": _f_none, "warm": _f_warm, "bw": _f_bw, "vintage": _f_vintage, "cool": _f_cool}
+def _f_golden(img):
+    # Golden-hour glow in the spirit of Instagram's Juno/Valencia: warm reds,
+    # lifted saturation and brightness, cooled-down blues.
+    img = _f_none(img)
+    img = ImageEnhance.Color(img).enhance(1.18)
+    img = ImageEnhance.Brightness(img).enhance(1.06)
+    img = ImageEnhance.Contrast(img).enhance(1.05)
+    r, g, b = img.split()
+    r = r.point(lambda i: min(255, int(i * 1.10) + 6))
+    b = b.point(lambda i: int(i * 0.88))
+    return Image.merge("RGB", (r, g, b))
+
+
+def _f_fade(img):
+    # Soft film fade (Gingham-like): gentle desaturation, lifted blacks and
+    # compressed whites via a shared tone curve.
+    img = _f_none(img)
+    img = ImageEnhance.Color(img).enhance(0.82)
+    img = ImageEnhance.Contrast(img).enhance(0.92)
+    lut = [min(255, int(18 + i * 0.90)) for i in range(256)]
+    r, g, b = img.split()
+    return Image.merge("RGB", (r.point(lut), g.point(lut), b.point(lut)))
+
+
+def _f_dramatic(img):
+    # Punchy Lo-Fi/X-Pro II-style grade: deep contrast and saturated colors.
+    img = _f_none(img)
+    img = ImageEnhance.Contrast(img).enhance(1.25)
+    img = ImageEnhance.Color(img).enhance(1.25)
+    return ImageEnhance.Brightness(img).enhance(0.98)
+
+
+FILTERS = {
+    "none": _f_none,
+    "warm": _f_warm,
+    "bw": _f_bw,
+    "vintage": _f_vintage,
+    "cool": _f_cool,
+    "golden": _f_golden,
+    "fade": _f_fade,
+    "dramatic": _f_dramatic,
+}
 
 FRAME_STYLES = {
     "classic":  {"bg": "#FFFDF9", "border": True,  "text": INK,       "sub": TEXT_SECONDARY, "margin": 14},
