@@ -11,7 +11,8 @@ from starlette.middleware.cors import CORSMiddleware
 from photo_strip import generate_strip_data_url
 from session_manager import (
     ABANDON_GRACE_SECONDS, DEFAULT_FILTER, DEFAULT_FRAME, DEFAULT_LAYOUT,
-    LAYOUT_ROUNDS, ROUND_GAP_SECONDS, VALID_FILTERS, VALID_FRAMES, Session, manager,
+    LAYOUT_ROUNDS, ROUND_GAP_SECONDS, SOLO_ABANDON_GRACE_SECONDS, VALID_FILTERS,
+    VALID_FRAMES, Session, manager,
 )
 
 ROOT_DIR = Path(__file__).parent
@@ -271,8 +272,10 @@ async def handle_disconnect(session: Session, role: str):
         session.state = "abandoned"
         await send_to(session, other, {"type": "partner_disconnected"})
 
+    grace_seconds = ABANDON_GRACE_SECONDS if session.ever_both_connected else SOLO_ABANDON_GRACE_SECONDS
+
     async def purge_if_not_reconnected():
-        await asyncio.sleep(ABANDON_GRACE_SECONDS)
+        await asyncio.sleep(grace_seconds)
         if not session.is_connected(role) and not session.both_connected():
             await manager.remove(session.code)
 
@@ -315,6 +318,8 @@ async def websocket_endpoint(websocket: WebSocket, code: str, role: str = Query(
 
     other = session.other_role(role)
     other_connected = session.is_connected(other)
+    if other_connected:
+        session.ever_both_connected = True
 
     await websocket.send_json(
         {

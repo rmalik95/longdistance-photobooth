@@ -14,6 +14,8 @@ import uuid
 
 SESSION_TTL_SECONDS = 30 * 60          # purge any session idle this long
 ABANDON_GRACE_SECONDS = 90             # time allowed for a partner to reconnect
+SOLO_ABANDON_GRACE_SECONDS = 20 * 60   # grace period before the guest has ever joined
+                                        # (e.g. host backgrounds the tab to share the link)
 ROUND_GAP_SECONDS = 1.6                # pause between rounds before next countdown
 
 LAYOUT_ROUNDS = {"1x4": 4, "1x3": 3, "2x2": 4}
@@ -49,6 +51,7 @@ class Session:
         self.created_at = time.time()
         self.last_activity = time.time()
         self.abandon_task = None
+        self.ever_both_connected = False
         self.lock = asyncio.Lock()
 
     def touch(self):
